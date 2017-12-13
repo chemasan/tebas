@@ -19,7 +19,7 @@ function pass()
 }
 function fail()
 {
-	exit 1
+	die $@
 }
 function assert()
 {

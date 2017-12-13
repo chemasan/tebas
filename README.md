@@ -18,8 +18,8 @@ Tebas provides helper functions that are available to be used in the tests:
  * die [message] - Prints the message to stderr and aborts execution (calls _exit 1_, which makes the test fail)
  * assert \<command\> [args..] - Executes the command and checks the return code is 0. If the check fails it aborts the execution. Square brakets or the _test_ command can be used as arguments for typical _if_ like conditional expressions (see _man test_ or _help test_)
  * assertTrue \<args...\> - arguments must be a conditional expression, they passed directly to the _test_ command. If the expression evaluates to false the execution is aborted.
- * pass - alias for _exit 1_
- * fail - alias for _exit 0_
+ * pass - alias for _exit 0_
+ * fail - alias for _die_
 
 ## Example
 ```
@@ -38,3 +38,4 @@ Tebas provides helper functions that are available to be used in the tests:
  - [ ] Add some sort of anotation to indicate expected exit
  - [ ] info, warn and error helper functions
  - [ ] assertReturn, assertStdout, assertStderr, assertOutput, assertAllOut helper functions with option to warn on values that do not match
+ - [ ] stop processing command options when '--' reached and treat the rest as arguments
