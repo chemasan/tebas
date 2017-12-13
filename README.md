@@ -32,3 +32,9 @@ Tebas provides helper functions that are available to be used in the tests:
  - [ ] Accept more than one test file in arguments
  - [ ] Search for test files automatically if none has been provided as arguments
  - [ ] Reports
+ - [ ] Add optional message argument to assert functions
+ - [ ] Add some sort of timeout anotation
+ - [ ] Add some sort of anotation to set setup and teardown per test
+ - [ ] Add some sort of anotation to indicate expected exit
+ - [ ] info, warn and error helper functions
+ - [ ] assertReturn, assertStdout, assertStderr, assertOutput, assertAllOut helper functions with option to warn on values that do not match
