@@ -19,18 +19,18 @@ function pass()
 }
 function fail()
 {
-	die $@
+	die "$@"
 }
 function assert()
 {
-	if ! $@
+	if ! "$@"
 	then
 		exit 1
 	fi
 }
 function assertTrue()
 {
-	if ! [ $@ ]
+	if ! [ "$@" ]
 	then
 		exit 1
 	fi
@@ -50,15 +50,17 @@ function printHelp()
 	echo " Options:"
 	echo "   -h, --help: show this message"
 	echo "   -s, --nocapture: prevent capturing the stdout and stderr output from the tests"
-	echo "   -v, --verbose: show all the ran test "
+    echo "   -x, --xtrace: run fixtures and tests code with xtrace option enabled (set -x). Implies --nocapture."
+	echo "   -v, --verbose: show the results of each test inmediately after it is executed"
 }
 function parseOptions()
 {
 	declare -g -i tebasOptNocapture=1
 	declare -g -i tebasOptVerbose=1
+	declare -g -i tebasOptXtrace=1
 	declare -g tebasArgTestfile=""
 
-	for parameter in $@
+	for parameter in "$@"
 	do
 		case ${parameter} in
 			(-s|--tebasOptNocapture)
@@ -66,6 +68,10 @@ function parseOptions()
 			;;
 			(-v|--tebasOptVerbose)
 				tebasOptVerbose=0
+			;;
+			(-x|--xtrace)
+				tebasOptXtrace=0
+				tebasOptNocapture=0
 			;;
 			(-h|--help)
 				printHelp
@@ -87,6 +93,7 @@ function runFunction()
 	local functionToRun="$1"
 	if [ "${tebasOptNocapture}" -eq 0 ]
 	then
+		[ "${tebasOptXtrace}" -eq 0 ] && set -x
 		${functionToRun}
 	else
 		${functionToRun} >/dev/null 2>&1
@@ -96,7 +103,7 @@ function runFunction()
 #main
 function main()
 {
-	parseOptions $@
+	parseOptions "$@"
 	
 	[ -z "${tebasArgTestfile}" ] && die "The argument 'filename' is mandatory. Run -h for usage help."
 	[ ! -r "${tebasArgTestfile}" ] && die "Cant' read '${tebasArgTestfile}'. Does the file exists and is readable?"
@@ -125,6 +132,7 @@ function main()
 			if declare -F setup >/dev/null
 			then
 				runFunction setup
+				set +x
 			fi
 			if declare -F teardown >/dev/null
 			then
@@ -156,7 +164,7 @@ function main()
 	if [ "${failed}" -gt 0 ]
 	then
 		echo -e "${RED}FAILED ${failed} tests${NOCOLOR}"
-		for failedTest in ${failedTests[@]}
+		for failedTest in "${failedTests[@]}"
 		do
 			echo " ${failedTest}"
 		done

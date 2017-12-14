@@ -39,3 +39,4 @@ Tebas provides helper functions that are available to be used in the tests:
  - [ ] info, warn and error helper functions
  - [ ] assertReturn, assertStdout, assertStderr, assertOutput, assertAllOut helper functions with option to warn on values that do not match
  - [ ] stop processing command options when '--' reached and treat the rest as arguments
+ - [x] option to enable tracing with -x
