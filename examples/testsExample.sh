@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 #fixtures
-function setup()
+function setUp()
 {
 	echo "UP"
 }
-function teardown()
+function tearDown()
 {
 	echo "DOWN"
 }

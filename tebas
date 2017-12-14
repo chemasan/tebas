@@ -128,14 +128,14 @@ function main()
 	for testfunc in $(declare -F | grep "^declare -f test" | cut -d\   -f3)
 	do
 		(
-			if declare -F setup >/dev/null
+			if declare -F setUp >/dev/null
 			then
-				runFunction setup
+				runFunction setUp
 				set +x
 			fi
-			if declare -F teardown >/dev/null
+			if declare -F tearDown >/dev/null
 			then
-				trap "runFunction teardown" EXIT
+				trap "runFunction tearDown" EXIT
 			fi
 	
 			runFunction "${testfunc}"

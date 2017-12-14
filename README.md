@@ -8,8 +8,8 @@ Tebas is a simple unit testing framework for testing Bash scripts. It is a littl
 ## Usage
 Write a file with your tests, each test must be a function which name begins with "test". See examples folder for sample tests files.
 
-If a function named 'setup' exists, it will be executed before each test.
-If a function named 'teardown' exists, it will be executed after each test.
+If a function named 'setUp' exists, it will be executed before each test.
+If a function named 'tearDown' exists, it will be executed after each test.
 
 If a test function return code is zero or it calls "exit 0", the test succeeds.
 If a test function return code is non-zero or it calls exit with a non-zero argument, the test fails.
