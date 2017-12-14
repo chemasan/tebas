@@ -19,7 +19,12 @@ function pass()
 }
 function fail()
 {
-	die "$@"
+	if [ -n "$1" ]
+	then
+		echo -ne "[ ${LIGHT_RED}ERROR${NOCOLOR} ] ${FUNCNAME[1]} - "
+		echo "$1"
+	fi
+	exit 1
 }
 function assert()
 {
@@ -34,6 +39,21 @@ function assertTrue()
 	then
 		exit 1
 	fi
+}
+function logInfo()
+{
+	echo -ne "[ ${LIGHT_BLUE}INFO${NOCOLOR}  ] ${FUNCNAME[1]} - "
+	echo "$1"
+}
+function logWarn()
+{
+	echo -ne "[${YELLOW}WARNING${NOCOLOR}] ${FUNCNAME[1]} - "
+	echo "$1"
+}
+function logErr()
+{
+	echo -ne "[ ${LIGHT_RED}ERROR${NOCOLOR} ] ${FUNCNAME[1]} - "
+	echo "$1"
 }
 
 #core functions
@@ -90,6 +110,29 @@ function tebasRunFunction()
 	fi
 }
 
+function tebasSetupColors()
+{
+	#if output is a terminal use colors
+	if [ -t 1 ]
+	then
+		declare -gr NOCOLOR='\033[0m'
+		declare -gr RED='\033[0;31m'
+		declare -gr GREEN='\033[32m'
+		declare -gr YELLOW='\033[33m'
+		declare -gr BLUE='\033[34m'
+		declare -gr LIGHT_RED='\033[91m'
+		declare -gr LIGHT_BLUE='\033[94m'
+	else
+		declare -gr NOCOLOR=''
+		declare -gr RED=''
+		declare -gr GREEN=''
+		declare -gr YELLOW=''
+		declare -gr BLUE=''
+		declare -gr LIGTH_RED=''
+		declare -gr LIGTH_BLUE=''
+	fi
+}
+
 #main
 function tebasMain()
 {
@@ -97,19 +140,8 @@ function tebasMain()
 	
 	[ -z "${tebasArgTestfile}" ] && die "The argument 'filename' is mandatory. Run -h for usage help."
 	[ ! -r "${tebasArgTestfile}" ] && die "Cant' read '${tebasArgTestfile}'. Does the file exists and is readable?"
-	
-	#if output is a terminal use colors
-	if [ -t 1 ]
-	then
-		declare -r NOCOLOR='\033[0m'
-		declare -r RED='\033[0;31m'
-		declare -r GREEN='\033[32m'
-	else
-		declare -r NOCOLOR=''
-		declare -r RED=''
-		declare -r GREEN=''
-	fi
-	
+
+	tebasSetupColors
 	
 	declare -i successed=0
 	declare -i failed=0

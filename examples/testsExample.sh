@@ -30,3 +30,10 @@ function testSomething()
 {
 	assertTrue  0 = 0 
 }
+function testLoggers()
+{
+	logInfo "This is an informational message"
+	logWarn "This is a warning"
+	logErr "This is an error"
+	fail "This is and error that makes the test fail"
+}

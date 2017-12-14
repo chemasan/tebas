@@ -18,8 +18,13 @@ Tebas provides helper functions that are available to be used in the tests:
  * die [message] - Prints the message to stderr and aborts execution (calls _exit 1_, which makes the test fail)
  * assert \<command\> [args..] - Executes the command and checks the return code is 0. If the check fails it aborts the execution. Square brakets or the _test_ command can be used as arguments for typical _if_ like conditional expressions (see _man test_ or _help test_)
  * assertTrue \<args...\> - arguments must be a conditional expression, they passed directly to the _test_ command. If the expression evaluates to false the execution is aborted.
- * pass - alias for _exit 0_
- * fail - alias for _die_
+ * pass - alias for _exit 0_ (makese the test succeed)
+ * fail [message] - If message is provided it is printed to stdout prefixed by an ERROR label and the name of the current test, then calls _exit 1_.
+ * logInfo [message] - Prints message to stdout prefixed by an INFO label and the name of the current test
+ * logWarn [message] - Prints message to stdout prefixed by a WARNING label and the name of the current test
+ * logErr [message] - Prints message to stdout prefixed by an ERROR label and the name of the current test
+
+Note that the log functions print to stdout so tebas has to run with flag '-s' in order to display the messages.
 
 ## Example
 ```
@@ -37,9 +42,9 @@ Tebas provides helper functions that are available to be used in the tests:
  - [ ] Add some sort of anotation to set setup and teardown per test
  - [ ] Add some sort of anotation to indicate expected exit
  - [ ] Add some sort of anotation to indicate escription
- - [ ] info, warn and error helper functions
+ - [x] logInfo, logWarn and logErr helper functions
  - [ ] assertReturn, assertStdout, assertStderr, assertOutput, assertAllOut helper functions with option to warn on values that do not match
- - [ ] parse arguments using getopt
- - [ ] stop processing command options when '--' reached and treat the rest as arguments
+ - [x] parse arguments using getopt
+ - [x] stop processing command options when '--' reached and treat the rest as arguments
  - [ ] Allow running individual tests
  - [x] option to enable tracing with -x
