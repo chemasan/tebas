@@ -123,7 +123,6 @@ function main()
 	
 	declare -i successed=0
 	declare -i failed=0
-	declare -a failedTests
 	
 	source "${tebasArgTestfile}"
 	for testfunc in $(declare -F | grep "^declare -f test" | cut -d\   -f3)
@@ -147,12 +146,11 @@ function main()
 			[ ${tebasOptVerbose} -eq 0 ] && echo -e "[${GREEN}SUCCESS${NOCOLOR}] ${testfunc}"
 		else
 			((failed++))
-			failedTests+=("${testfunc}")
-			[ ${tebasOptVerbose} -eq 0 ] &&  echo -e "[${RED}FAILED${NOCOLOR} ] ${testfunc}"
+			echo -e "[${RED}FAILED${NOCOLOR} ] ${testfunc}"
 		fi
 	done
 	
-	if [ ${tebasOptVerbose} -eq 0 ] || [ "${tebasOptNocapture}" -eq 0 ]
+	if [ ${tebasOptVerbose} -eq 0 ] || [ "${tebasOptNocapture}" -eq 0 ] || [ ${failed} -gt 0 ]
 	then
 		echo
 		echo "----------------------------------------------------------------------"
@@ -164,10 +162,6 @@ function main()
 	if [ "${failed}" -gt 0 ]
 	then
 		echo -e "${RED}FAILED ${failed} tests${NOCOLOR}"
-		for failedTest in "${failedTests[@]}"
-		do
-			echo " ${failedTest}"
-		done
 		exit 1
 	else
 		echo -e "${GREEN}OK${NOCOLOR}"

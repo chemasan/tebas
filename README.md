@@ -36,7 +36,10 @@ Tebas provides helper functions that are available to be used in the tests:
  - [ ] Add some sort of timeout anotation
  - [ ] Add some sort of anotation to set setup and teardown per test
  - [ ] Add some sort of anotation to indicate expected exit
+ - [ ] Add some sort of anotation to indicate escription
  - [ ] info, warn and error helper functions
  - [ ] assertReturn, assertStdout, assertStderr, assertOutput, assertAllOut helper functions with option to warn on values that do not match
+ - [ ] parse arguments using getopt
  - [ ] stop processing command options when '--' reached and treat the rest as arguments
+ - [ ] Allow running individual tests
  - [x] option to enable tracing with -x
