@@ -169,4 +169,8 @@ function tebasMain()
 	fi
 }
 
-tebasMain $@
+
+if [ "${FUNCNAME[0]}" = "main" ]
+then
+	tebasMain $@
+fi
