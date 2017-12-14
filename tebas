@@ -37,7 +37,7 @@ function assertTrue()
 }
 
 #core functions
-function printHelp()
+function tebasPrintHelp()
 {
 	echo "Tebas is a test framework for Bash shell scripts"
 	echo 
@@ -53,7 +53,7 @@ function printHelp()
     echo "   -x, --xtrace: run fixtures and tests code with xtrace option enabled (set -x). Implies --nocapture."
 	echo "   -v, --verbose: show the results of each test inmediately after it is executed"
 }
-function parseOptions()
+function tebasParseOptions()
 {
 	declare -g -i tebasOptNocapture=1
 	declare -g -i tebasOptVerbose=1
@@ -74,7 +74,7 @@ function parseOptions()
 				tebasOptNocapture=0
 			;;
 			(-h|--help)
-				printHelp
+				tebasPrintHelp
 				exit 0
 			;;
 			(*)
@@ -88,7 +88,7 @@ function parseOptions()
 	
 	done
 }
-function runFunction()
+function tebasRunFunction()
 {
 	local functionToRun="$1"
 	if [ "${tebasOptNocapture}" -eq 0 ]
@@ -101,9 +101,9 @@ function runFunction()
 }
 
 #main
-function main()
+function tebasMain()
 {
-	parseOptions "$@"
+	tebasParseOptions "$@"
 	
 	[ -z "${tebasArgTestfile}" ] && die "The argument 'filename' is mandatory. Run -h for usage help."
 	[ ! -r "${tebasArgTestfile}" ] && die "Cant' read '${tebasArgTestfile}'. Does the file exists and is readable?"
@@ -130,15 +130,15 @@ function main()
 		(
 			if declare -F setUp >/dev/null
 			then
-				runFunction setUp
+				tebasRunFunction setUp
 				set +x
 			fi
 			if declare -F tearDown >/dev/null
 			then
-				trap "runFunction tearDown" EXIT
+				trap "tebasRunFunction tearDown" EXIT
 			fi
 	
-			runFunction "${testfunc}"
+			tebasRunFunction "${testfunc}"
 		) 
 		if [ 0 -eq "$?" ]
 		then
@@ -169,4 +169,4 @@ function main()
 	fi
 }
 
-main $@
+tebasMain $@

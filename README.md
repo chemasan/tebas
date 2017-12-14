@@ -28,7 +28,7 @@ Tebas provides helper functions that are available to be used in the tests:
 
 ## TODO
  - [ ] Allow using custom function names for fixtures to avoid function name collission
- - [ ] Prefix internal function names to mitigate the possibility of function name collission
+ - [x] Prefix internal function names to mitigate the possibility of function name collission
  - [ ] Accept more than one test file in arguments
  - [ ] Search for test files automatically if none has been provided as arguments
  - [ ] Reports
