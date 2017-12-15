@@ -198,7 +198,7 @@ function tebasMain()
 }
 
 
-if [ "${FUNCNAME[0]}" = "main" ]
+if [ "${BASH_SOURCE[0]}" = "$0" ]
 then
-	tebasMain $@
+	tebasMain "$@"
 fi
