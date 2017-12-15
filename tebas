@@ -61,24 +61,23 @@ function tebasPrintHelp()
 {
 	echo "Tebas is a test framework for Bash shell scripts"
 	echo 
-	echo "usage: tebas [-s|--nocapture] [-v|--verbose] [-x|--xtrace] <filename>"
+	echo "usage: tebas [-v|--verbose] <filename>"
 	echo "       tebas <-h|--help>"
 	echo
 	echo " Arguments:"
-	echo "   <filename>: file with the test to execute"
+	echo "   <filename>: file with the test to execute."
 	echo
 	echo " Options:"
-	echo "   -h, --help: show this message"
-	echo "   -s, --nocapture: prevent capturing the stdout and stderr output from the tests"
-    echo "   -x, --xtrace: run fixtures and tests code with xtrace option enabled (set -x). Implies --nocapture."
-	echo "   -v, --verbose: show the results of each test inmediately after it is executed"
+	echo "   -h, --help: show this message."
+	echo "   -v, --verbose: Increases verbosity level. It can be used more than once to get more verbose output."
+	echo "                  With '-v' successful test are also displayed after execution."
+	echo "                  With '-vv' tests stdout and stderr are not captured and are displayed as usual. "
+	echo "                  With '-vvv fixtures and tests code are run with xtrace option enabled (set -x)"
 }
 function tebasParseOptions()
 {
 	#Options as global variables
-	declare -g -i tebasOptNocapture=1
-	declare -g -i tebasOptVerbose=1
-	declare -g -i tebasOptXtrace=1
+	declare -g -i tebasOptVerbosity=0
 	declare -g tebasArgTestfile=""
 
 	local opts="$( getopt -o svxh -l nocapture,verbose,xtrace,help -n "$(basename $0)" -- "$@" )"
@@ -87,9 +86,7 @@ function tebasParseOptions()
 	while [ -n "$1" ]
 	do
 		case "$1" in
-			(-s|--nocapture) tebasOptNocapture=0 ;;
-			(-v|--verbose)   tebasOptVerbose=0 ;;
-			(-x|--xtrace)    tebasOptXtrace=0 ; tebasOptNocapture=0 ;;
+			(-v|--verbose)   ((tebasOptVerbosity++)) ;;
 			(-h|--help)      tebasPrintHelp; exit 0 ;;
 			(--) shift; break;;
 			(*) break ;;
@@ -101,9 +98,9 @@ function tebasParseOptions()
 function tebasRunFunction()
 {
 	local functionToRun="$1"
-	if [ "${tebasOptNocapture}" -eq 0 ]
+	if [ "${tebasOptVerbosity}" -ge 2 ]
 	then
-		[ "${tebasOptXtrace}" -eq 0 ] && set -x
+		[ "${tebasOptVerbosity}" -ge 3 ] && set -x
 		${functionToRun}
 	else
 		${functionToRun} >/dev/null 2>&1
@@ -165,14 +162,14 @@ function tebasMain()
 		if [ 0 -eq "$?" ]
 		then
 			((successed++))
-			[ ${tebasOptVerbose} -eq 0 ] && echo -e "[${GREEN}SUCCESS${NOCOLOR}] ${testfunc}"
+			[ ${tebasOptVerbosity} -gt 0 ] && echo -e "[${GREEN}SUCCESS${NOCOLOR}] ${testfunc}"
 		else
 			((failed++))
 			echo -e "[${RED}FAILED${NOCOLOR} ] ${testfunc}"
 		fi
 	done
 	
-	if [ ${tebasOptVerbose} -eq 0 ] || [ "${tebasOptNocapture}" -eq 0 ] || [ ${failed} -gt 0 ]
+	if [ ${tebasOptVerbosity} -gt 0 ] || [ ${failed} -gt 0 ]
 	then
 		echo
 		echo "----------------------------------------------------------------------"

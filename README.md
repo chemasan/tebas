@@ -24,7 +24,7 @@ Tebas provides helper functions that are available to be used in the tests:
  * logWarn [message] - Prints message to stdout prefixed by a WARNING label and the name of the current test
  * logErr [message] - Prints message to stdout prefixed by an ERROR label and the name of the current test
 
-Note that the log functions print to stdout so tebas has to run with flag '-s' in order to display the messages.
+Note that the log functions print to stdout so tebas has to run with flag '-vv' in order to display the messages.
 
 ## Example
 ```
@@ -41,10 +41,11 @@ Note that the log functions print to stdout so tebas has to run with flag '-s' i
  - [ ] Add some sort of timeout anotation
  - [ ] Add some sort of anotation to set setup and teardown per test
  - [ ] Add some sort of anotation to indicate expected exit
- - [ ] Add some sort of anotation to indicate escription
+ - [ ] Add some sort of anotation to indicate description
  - [x] logInfo, logWarn and logErr helper functions
  - [ ] assertReturn, assertStdout, assertStderr, assertOutput, assertAllOut helper functions with option to warn on values that do not match
  - [x] parse arguments using getopt
  - [x] stop processing command options when '--' reached and treat the rest as arguments
  - [ ] Allow running individual tests
  - [x] option to enable tracing with -x
+ - [x] Replace -x and -s with verbosity levels
