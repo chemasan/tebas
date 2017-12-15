@@ -61,7 +61,7 @@ function tebasPrintHelp()
 {
 	echo "Tebas is a test framework for Bash shell scripts"
 	echo 
-	echo "usage: tebas [-v|--verbose] <filename>"
+	echo "usage: tebas [-v|--verbose] [-t|--tests testname1,testname2,...] <filename>"
 	echo "       tebas <-h|--help>"
 	echo
 	echo " Arguments:"
@@ -73,14 +73,16 @@ function tebasPrintHelp()
 	echo "                  With '-v' successful test are also displayed after execution."
 	echo "                  With '-vv' tests stdout and stderr are not captured and are displayed as usual. "
 	echo "                  With '-vvv fixtures and tests code are run with xtrace option enabled (set -x)"
+	echo "   -t, --tests testname1,testname2,... : Run only the selected tests."
 }
 function tebasParseOptions()
 {
 	#Options as global variables
 	declare -g -i tebasOptVerbosity=0
+	declare -g tebasOptTestsToRun=""
 	declare -g tebasArgTestfile=""
 
-	local opts="$( getopt -o svxh -l nocapture,verbose,xtrace,help -n "$(basename $0)" -- "$@" )"
+	local opts="$( getopt -o vht: -l verbose,help,tests: -n "$(basename $0)" -- "$@" )"
 	[ "$?" -ne 0 ] && exit 1
 	eval set -- "${opts}"
 	while [ -n "$1" ]
@@ -88,6 +90,7 @@ function tebasParseOptions()
 		case "$1" in
 			(-v|--verbose)   ((tebasOptVerbosity++)) ;;
 			(-h|--help)      tebasPrintHelp; exit 0 ;;
+			(-t|--tests)   shift; tebasOptTestsToRun="${1//,/$'\n'}" ;;
 			(--) shift; break;;
 			(*) break ;;
 		esac
@@ -144,7 +147,13 @@ function tebasMain()
 	declare -i failed=0
 	
 	source "${tebasArgTestfile}"
-	for testfunc in $(declare -F | grep "^declare -f test" | cut -d\   -f3)
+
+	if [ -z "${tebasOptTestsToRun}" ]
+	then
+		tebasOptTestsToRun="$(declare -F | grep "^declare -f test" | cut -d\   -f3)"
+	fi
+
+	for testfunc in ${tebasOptTestsToRun}
 	do
 		(
 			if declare -F setUp >/dev/null
@@ -154,7 +163,7 @@ function tebasMain()
 			fi
 			if declare -F tearDown >/dev/null
 			then
-				trap "tebasRunFunction tearDown" EXIT
+				trap "set +x;tebasRunFunction tearDown" EXIT
 			fi
 	
 			tebasRunFunction "${testfunc}"

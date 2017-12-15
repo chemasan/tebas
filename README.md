@@ -46,6 +46,6 @@ Note that the log functions print to stdout so tebas has to run with flag '-vv' 
  - [ ] assertReturn, assertStdout, assertStderr, assertOutput, assertAllOut helper functions with option to warn on values that do not match
  - [x] parse arguments using getopt
  - [x] stop processing command options when '--' reached and treat the rest as arguments
- - [ ] Allow running individual tests
+ - [x] Allow running individual tests
  - [x] option to enable tracing with -x
  - [x] Replace -x and -s with verbosity levels
