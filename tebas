@@ -91,7 +91,7 @@ function logInfo()
 }
 function logWarn()
 {
-	echo -ne "[${YELLOW}WARNING${NOCOLOR}] ${FUNCNAME[1]} - "
+	echo -ne "[ ${YELLOW}WARNING${NOCOLOR}] ${FUNCNAME[1]} - "
 	echo "$1"
 }
 function logErr()
@@ -99,12 +99,55 @@ function logErr()
 	echo -ne "[ ${LIGHT_RED}ERROR${NOCOLOR} ] ${FUNCNAME[1]} - "
 	echo "$1"
 }
+function runCmd()
+{
+	# Parse options
+	local opts
+	opts="$( getopt -o o:e:r: -l output,error,return: -n "runCmd" -- "$@" )"
+	[ "$?" -ne 0 ] && return 2
+	eval set -- "${opts}"
+	while [ -n "$1" ]
+	do
+		case "$1" in
+			(-o|--output) shift; declare -n outvar="$1" ;;
+			(-e|--error)  shift; declare -n errvar="$1" ;;
+			(-r|--return) shift; declare -n retvar="$1" ;;
+			(--) shift; break;;
+			(*) break ;;
+		esac
+		shift
+	done
+
+	# Prepare execution
+	if [ -R outvar ]
+	then
+		local outfile
+		outfile="$(mktemp)"
+		[ "$?" -ne 0 ] && return 3
+	fi
+	if [ -R errvar ]
+	then
+		local errfile
+		errfile="$(mktemp)"
+		[ "$?" -ne 0 ] && return 3
+	fi
+
+	# Execute
+	"$@" 1>${outfile:-/dev/stdout} 2>${errfile:-/dev/stderr}
+	local retval=$?
+
+	# Return data and cleanup
+	test -R retvar && retvar=${retval}
+	test -R outvar && outvar="$(cat ${outfile})" && rm -f "${outfile}"
+	test -R errvar && errvar="$(cat ${errfile})" && rm -f "${errfile}"
+	return ${retval}
+}
 
 #core functions
 function tebasPrintHelp()
 {
 	echo "Tebas is a test framework for Bash shell scripts"
-	echo 
+	echo
 	echo "usage: tebas [-v|--verbose] [-t|--tests testname1,testname2,...] <filename>"
 	echo "       tebas <-h|--help>"
 	echo
@@ -181,15 +224,15 @@ function tebasSetupColors()
 function tebasMain()
 {
 	tebasParseOptions "$@"
-	
+
 	[ -z "${tebasArgTestfile}" ] && die "The argument 'filename' is mandatory. Run -h for usage help."
 	[ ! -r "${tebasArgTestfile}" ] && die "Cant' read '${tebasArgTestfile}'. Does the file exists and is readable?"
 
 	tebasSetupColors
-	
+
 	declare -i successed=0
 	declare -i failed=0
-	
+
 	source "${tebasArgTestfile}"
 
 	if [ -z "${tebasOptTestsToRun}" ]
@@ -209,9 +252,9 @@ function tebasMain()
 			then
 				trap "set +x;tebasRunFunction tearDown" EXIT
 			fi
-	
+
 			tebasRunFunction "${testfunc}"
-		) 
+		)
 		if [ 0 -eq "$?" ]
 		then
 			((successed++))
@@ -221,14 +264,14 @@ function tebasMain()
 			echo -e "[${RED}FAILED${NOCOLOR} ] ${testfunc}"
 		fi
 	done
-	
+
 	if [ ${tebasOptVerbosity} -gt 0 ] || [ ${failed} -gt 0 ]
 	then
 		echo
 		echo "----------------------------------------------------------------------"
 		echo
 	fi
-	
+
 	echo "Ran $((successed + failed)) tests"
 	echo
 	if [ "${failed}" -gt 0 ]

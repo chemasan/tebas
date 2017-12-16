@@ -55,8 +55,8 @@ function testAsserts()
 	assertIntNotEq val1 val3
 
 	# assertReMatch and assertReNotMatch check string matching regular expressions
-	assertReMatch '192.168.0.1' '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]$' 
-	assertReNotMatch '192-168-0-1' '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]$' 
+	assertReMatch '192.168.0.1' '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]$'
+	assertReNotMatch '192-168-0-1' '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]$'
 }
 # This test fails
 function testDying()
@@ -73,4 +73,13 @@ function testLoggers()
 	logWarn "This is a warning"
 	logErr "This is an error"
 	fail "This is and error that makes the test fail" # This one also aborts execution
+}
+# This test succeeds
+function testRunCmd()
+{
+	# runCmd can run a command and capture its outputs in the indicated variables
+	runCmd -o myout -e myerr -r ret -- bash -c 'echo "standard message"; echo "error message" >&2;  exit 7'
+	assertTrue "${ret}" -eq "7"
+	assertTrue "${myout}" = "standard message"
+	assertTrue "${myerr}" = "error message"
 }
