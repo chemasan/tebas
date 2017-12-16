@@ -40,6 +40,50 @@ function assertTrue()
 		exit 1
 	fi
 }
+function assertStrEq()
+{
+	if ! [ "${!1}" = "${!2}" ]
+	then
+		exit 1
+	fi
+}
+function assertStrNotEq()
+{
+	if ! [ "${!1}" != "${!2}" ]
+	then
+		exit 1
+	fi
+}
+function assertIntEq()
+{
+	if ! [ "${!1}" -eq "${!2}" ]
+	then
+		exit 1
+	fi
+}
+function assertIntNotEq()
+{
+	if ! [ "${!1}" -ne "${!2}" ]
+	then
+		exit 1
+	fi
+}
+function assertReMatch()
+{
+	if ! [[ ${1} =~ ${2} ]]
+	then
+		exit 1
+	fi
+}
+function assertReNotMatch()
+{
+	[[ ${1} =~ ${2} ]]
+	local ret=$?  # 0 matched, 1 not matched, 2 malformed regex
+	if [ "${ret}" -ne 1 ]
+	then
+		exit 1
+	fi
+}
 function logInfo()
 {
 	echo -ne "[ ${LIGHT_BLUE}INFO${NOCOLOR}  ] ${FUNCNAME[1]} - "

@@ -16,7 +16,13 @@ If a function named 'tearDown' exists, it will be executed after each test.
 
 Tebas provides helper functions that are available to be used in the tests:
  * assert \<command\> [args..] - Executes the command and checks the return code is 0. If the check fails it aborts the execution (calling _exit 1_). Square brakets or the _test_ command can be used as arguments for typical _if_ like conditional expressions (see _man test_ or _help test_)
- * assertTrue \<args...\> - arguments must be a conditional expression, they are passed directly to the _test_ command. If the expression evaluates to false the execution is aborted.
+ * assertTrue \<args...\> - Arguments must be a conditional expression, they are passed directly to the _test_ command. If the expression evaluates to false the execution is aborted.
+ * assertStrEq \<varname1\> \<varname2\> - Arguments must be variable names. If the values of the referenced variables compared as strings are not equal the execution is aborted.
+ * assertStrNotEq \<varname1\> \<varname2\> - Arguments must be variable names. If the values of the referenced variables compared as strings are not different the execution is aborted.
+ * assertIntEq \<varname1\> \<varname2\> - Arguments must be variable names. If the values of the referenced variables compared as integers are not equal the execution is aborted. If any value is not an integer it aborts too.
+ * assertIntNotEq \<varname1\> \<varname2\> - Arguments must be variable names. If the values of the referenced variables compared as integers are not different the execution is aborted. If any value is not an integer it aborts too.
+ * assertReMatch \<string\> \<regex\> - Check the string matches the regex. If it doesn't the execution is aborted. If the regex is invalid it aborts too.
+ * assertReNotMatch \<string\> \<regex\> - Check the string doesn't match the regex. If it does the execution is aborted. If the regex is invalid it aborts too.
  * pass - alias for _exit 0_ (makese the test succeed)
  * die [message] - Prints the message to stderr and aborts execution (calls _exit 1_, which makes the test fail)
  * fail [message] - If message is provided it is printed to stdout prefixed by an ERROR label and the name of the current test, then calls _exit 1_.
@@ -59,7 +65,8 @@ FAILED 3 tests
  - [ ] Add some sort of anotation to indicate description
  - [x] logInfo, logWarn and logErr helper functions
  - [ ] assertReturn, assertStdout, assertStderr, assertOutput, assertAllOut helper functions with option to warn on values that do not match
- - [ ] assertStrEq, assertStrNotEq, assertIntEq, assertIntNotEq, helper functions using references
+ - [x] assertStrEq, assertStrNotEq, assertIntEq, assertIntNotEq, helper functions using references
+ - [x] assertReMatch, assertReNotMatch
  - [x] parse arguments using getopt
  - [x] stop processing command options when '--' reached and treat the rest as arguments
  - [x] Allow running individual tests

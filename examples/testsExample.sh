@@ -36,9 +36,27 @@ function testAsserts()
 	# assert executes the command and checks the returned status is 0
 	assert grep root /etc/passwd >/dev/null
 
-	#assertTrue passes the arguments directly to the 'test' command and checks the condition is true
+	# assertTrue passes the arguments directly to the 'test' command and checks the condition is true
 	grep root /etc/passwd >/dev/null
 	assertTrue $? -eq 0
+
+	# assertStrEq and assertStrNotEq takes two variable names and compare their values as strings
+	local str1="Hello world"
+	local str2="Hello world"
+	local str3="Bye world"
+	assertStrEq str1 str2
+	assertStrNotEq str1 str3
+
+	# assertIntEq and assertIntNotEq takes two variable names and compare their values as integers
+	local -i val1=33
+	local -i val2=33
+	local -i val3=44
+	assertIntEq val1 val2
+	assertIntNotEq val1 val3
+
+	# assertReMatch and assertReNotMatch check string matching regular expressions
+	assertReMatch '192.168.0.1' '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]$' 
+	assertReNotMatch '192-168-0-1' '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]$' 
 }
 # This test fails
 function testDying()
