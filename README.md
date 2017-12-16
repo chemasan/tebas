@@ -13,6 +13,7 @@ If a test function return code is non-zero or it calls exit with a non-zero argu
 
 If a function named 'setUp' exists, it will be executed before each test.
 If a function named 'tearDown' exists, it will be executed after each test.
+Different function names can be used for fixtures by setting the variables TEBAS_DEFAULT_SETUP and TEBAS_DEFAULT_TEARDOWN, [example](examples/testsCustomSetUp.sh).
 
 Tebas provides helper functions that are available to be used in the tests:
  * assert \<command\> \[args..\] - Executes the command and checks the return code is 0. If the check fails it aborts the execution (calling _exit 1_). Square brakets or the _test_ command can be used as arguments for typical _if_ like conditional expressions (see _man test_ or _help test_)
@@ -54,9 +55,9 @@ FAILED 3 tests
 ```
 
 ## TODO
- - [ ] Allow using custom function names for fixtures to avoid function name collission
+ - [x] Allow using custom function names for fixtures to avoid function name collisions
  - [ ] setUpOnce and tearDownOnce fixtures
- - [x] Prefix internal function names to mitigate the possibility of function name collission
+ - [x] Prefix internal function names to mitigate the possibility of function name collisions
  - [ ] Accept more than one test file in arguments
  - [ ] Search for test files automatically if none has been provided as arguments
  - [ ] Reports
@@ -66,7 +67,7 @@ FAILED 3 tests
  - [ ] Add some sort of anotation to indicate expected exit
  - [ ] Add some sort of anotation to indicate description
  - [x] logInfo, logWarn and logErr helper functions
- - [ ] assertReturn, assertStdout, assertStderr, assertOutput, assertAllOut helper functions with option to warn on values that do not match
+ - [ ] asssertCmd helper function
  - [x] assertStrEq, assertStrNotEq, assertIntEq, assertIntNotEq, helper functions using references
  - [x] assertReMatch, assertReNotMatch
  - [x] runCmd helper function
@@ -75,3 +76,4 @@ FAILED 3 tests
  - [x] Allow running individual tests
  - [x] option to enable tracing with -x
  - [x] Replace -x and -s with verbosity levels
+ - [ ] Reestructure README

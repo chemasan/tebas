@@ -4,7 +4,7 @@
 # Copyright (c) 2017 Jose Manuel Sanchez Madrid. This file is licensed under MIT license. See file LICENSE for details.
 #
 
-#Auxiliary functions
+#Helper functions
 function die()
 {
 	if [ -n "$1" ]
@@ -149,7 +149,7 @@ function tebasPrintHelp()
 	echo "Tebas is a test framework for Bash shell scripts"
 	echo
 	echo "usage: tebas [-v|--verbose] [-t|--tests testname1,testname2,...] <filename>"
-	echo "       tebas <-h|--help>"
+	echo "       tebas -h|--help"
 	echo
 	echo " Arguments:"
 	echo "   <filename>: file with the test to execute."
@@ -230,8 +230,8 @@ function tebasMain()
 
 	tebasSetupColors
 
-	declare -i successed=0
-	declare -i failed=0
+	declare -i tebasSucceededTests=0
+	declare -i tebasFailedTests=0
 
 	source "${tebasArgTestfile}"
 
@@ -239,44 +239,45 @@ function tebasMain()
 	then
 		tebasOptTestsToRun="$(declare -F | grep "^declare -f test" | cut -d\   -f3)"
 	fi
-
-	for testfunc in ${tebasOptTestsToRun}
+	local tebasTestSetupFunction="${TEBAS_DEFAULT_SETUP:-setUp}"
+	local tebasTestTeardownFunction="${TEBAS_DEFAULT_TEARDOWN:-tearDown}"
+	for tebasTestFunction in ${tebasOptTestsToRun}
 	do
 		(
-			if declare -F setUp >/dev/null
+			if declare -F "${tebasTestSetupFunction}" >/dev/null
 			then
-				tebasRunFunction setUp
+				tebasRunFunction "${tebasTestSetupFunction}"
 				set +x
 			fi
-			if declare -F tearDown >/dev/null
+			if declare -F "${tebasTestTeardownFunction}" >/dev/null
 			then
-				trap "set +x;tebasRunFunction tearDown" EXIT
+				trap "set +x;tebasRunFunction '${tebasTestTeardownFunction}'" EXIT
 			fi
 
-			tebasRunFunction "${testfunc}"
+			tebasRunFunction "${tebasTestFunction}"
 		)
 		if [ 0 -eq "$?" ]
 		then
-			((successed++))
-			[ ${tebasOptVerbosity} -gt 0 ] && echo -e "[${GREEN}SUCCESS${NOCOLOR}] ${testfunc}"
+			((tebasSucceededTests++))
+			[ ${tebasOptVerbosity} -gt 0 ] && echo -e "[${GREEN}SUCCESS${NOCOLOR}] ${tebasTestFunction}"
 		else
-			((failed++))
-			echo -e "[${RED}FAILED${NOCOLOR} ] ${testfunc}"
+			((tebasFailedTests++))
+			echo -e "[${RED}FAILED${NOCOLOR} ] ${tebasTestFunction}"
 		fi
 	done
 
-	if [ ${tebasOptVerbosity} -gt 0 ] || [ ${failed} -gt 0 ]
+	if [ ${tebasOptVerbosity} -gt 0 ] || [ ${tebasFailedTests} -gt 0 ]
 	then
 		echo
 		echo "----------------------------------------------------------------------"
 		echo
 	fi
 
-	echo "Ran $((successed + failed)) tests"
+	echo "Ran $((tebasSucceededTests + tebasFailedTests)) tests"
 	echo
-	if [ "${failed}" -gt 0 ]
+	if [ "${tebasFailedTests}" -gt 0 ]
 	then
-		echo -e "${RED}FAILED ${failed} tests${NOCOLOR}"
+		echo -e "${RED}FAILED ${tebasFailedTests} tests${NOCOLOR}"
 		exit 1
 	else
 		echo -e "${GREEN}OK${NOCOLOR}"
