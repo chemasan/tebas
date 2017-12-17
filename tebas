@@ -84,6 +84,57 @@ function assertReNotMatch()
 		exit 1
 	fi
 }
+function assertCmd()
+{
+	# Parse options
+	local opts
+	opts="$( getopt -o o:e:r:n -l output,error,return:ignore-failed-exec -n "assertCmd" -- "$@" )"
+	[ "$?" -ne 0 ] && exit 2
+	eval set -- "${opts}"
+	local runCmdOpts=""
+	local -i ignoreFailedExec=1
+	while [ -n "$1" ]
+	do
+		case "$1" in
+			(-o|--output)
+				shift
+				local expectedOutput="$1"
+				local resultOutput=""
+				runCmdOpts+=" -o resultOutput"
+				;;
+			(-e|--error)
+				shift
+				local expectedError="$1"
+				local resultError=""
+				runCmdOpts+=" -e resultError"
+				;;
+			(-r|--return)
+				shift
+				local expectedReturn="$1"
+				local resultReturn=""
+				runCmdOpts+=" -r resultReturn"
+				;;
+			(-n|--ignore-failed-exec)
+				ignoreFailedExec=0
+				;;
+			(--) shift; break;;
+			(*) break ;;
+		esac
+		shift
+	done
+
+	# Execute
+	runCmd ${runCmdOpts} "$@"
+	local ret=$?
+
+	# Check resuls
+	test "${ignoreFailedExec}" -ne "0" && test "${ret}" -eq 126 && exit 126
+	test "${ignoreFailedExec}" -ne "0" && test "${ret}" -eq 127 && exit 127
+	test -v expectedReturn && assertIntEq resultReturn expectedReturn
+	test -v expectedOutput && assertStrEq resultOutput expectedOutput
+	test -v expectedError  && assertStrEq resultError  expectedError
+	return 0
+}
 function logInfo()
 {
 	echo -ne "[ ${LIGHT_BLUE}INFO${NOCOLOR}  ] ${CURRENT_TEST} - "

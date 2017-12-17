@@ -77,6 +77,9 @@ function testAsserts()
 	# assertReMatch and assertReNotMatch check string matching regular expressions
 	assertReMatch '192.168.0.1' '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]$'
 	assertReNotMatch '192-168-0-1' '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]$'
+
+	# asssertCmd runs the provided command and checks its outputs
+	assertCmd -o 'Hello world' -e '' -r 0 -- echo "Hello world"
 }
 # This test fails
 function testDying()

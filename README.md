@@ -30,6 +30,7 @@ Tebas provides helper functions that are available to be used in the tests:
  * assertIntNotEq \<varname1\> \<varname2\> - Arguments must be variable names. If the values of the referenced variables compared as integers are not different the execution is aborted. If any value is not an integer it aborts too.
  * assertReMatch \<string\> \<regex\> - Check the string matches the regex. If it doesn't the execution is aborted. If the regex is invalid it aborts too.
  * assertReNotMatch \<string\> \<regex\> - Check the string doesn't match the regex. If it does the execution is aborted. If the regex is invalid it aborts too.
+ * assertCmd \[-o|--output string\] \[-e|--error string\] \[-r|--return code\] \[-n|--ignore-failed-exec\] \<command\> \[args\] - Executes the command capturing its outputs and checks they match the values provided at the options. If they don't match the exection is aborted. If the command fails to execute cause it doesn't exists or is a non executable file (returns with code 127 or 126) execution is aborted too. Option _--output_ checks the command's stdout matches the provided string. Option _--error_ checks the command's stder matches the provided string. Option _--return_ checks the command's exit status matches the provided code. Option '--ignore-failed-exec' prevents assertCmd to check if command execution failed, this is necessary if the tested command returns with 126 or 127 as its status code that are the same codes returned by the shell if the command is not executable or doesn't exists. If no option is provided assertCmd just checks the command has been executed (it returns with status not 126 or 127).
  * pass - alias for _exit 0_ (makese the test succeed)
  * die \[message\] - Prints the message to stderr and aborts execution (calls _exit 1_, which makes the test fail)
  * fail \[message\] - If message is provided it is printed to stdout prefixed by an ERROR label and the name of the current test, then calls _exit 1_.
@@ -77,7 +78,7 @@ FAILED 3 tests
  - [x] CURRENT_TEST variable accessible in the tests code
  - [x] logInfo, logWarn and logErr helper functions
  - [x] Make loggers print the current test, not the current function
- - [ ] asssertCmd helper function
+ - [x] asssertCmd helper function
  - [x] assertStrEq, assertStrNotEq, assertIntEq, assertIntNotEq, helper functions using references
  - [x] assertReMatch, assertReNotMatch
  - [x] runCmd helper function
