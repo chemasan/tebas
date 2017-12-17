@@ -28,59 +28,131 @@ function fail()
 }
 function assert()
 {
+	local message=''
+	if [ "$1" = "-m" ]
+	then
+		shift
+		message="$1"
+		shift
+	fi
 	if ! "$@"
 	then
+		test -n "${message}" && logErr "${message}"
 		exit 1
 	fi
 }
 function assertTrue()
 {
+	local message=''
+	if [ "$1" = "-m" ]
+	then
+		shift
+		message="$1"
+		shift
+	fi
 	if ! [ "$@" ]
 	then
+		test -n "${message}" && logErr "${message}"
 		exit 1
 	fi
 }
 function assertStrEq()
 {
+	local message=''
+	if [ "$1" = "-m" ]
+	then
+		shift
+		message="$1"
+		shift
+	fi
+	test ! -v "$1" && exit 2
+	test ! -v "$2" && exit 2
 	if ! [ "${!1}" = "${!2}" ]
 	then
+		test -n "${message}" && logErr "${message}"
 		exit 1
 	fi
 }
 function assertStrNotEq()
 {
+	local message=''
+	if [ "$1" = "-m" ]
+	then
+		shift
+		message="$1"
+		shift
+	fi
+	test ! -v "$1" && exit 2
+	test ! -v "$2" && exit 2
 	if ! [ "${!1}" != "${!2}" ]
 	then
+		test -n "${message}" && logErr "${message}"
 		exit 1
 	fi
 }
 function assertIntEq()
 {
+	local message=''
+	if [ "$1" = "-m" ]
+	then
+		shift
+		message="$1"
+		shift
+	fi
+	test ! -v "$1" && exit 2
+	test ! -v "$2" && exit 2
 	if ! [ "${!1}" -eq "${!2}" ]
 	then
+		test -n "${message}" && logErr "${message}"
 		exit 1
 	fi
 }
 function assertIntNotEq()
 {
+	local message=''
+	if [ "$1" = "-m" ]
+	then
+		shift
+		message="$1"
+		shift
+	fi
+	test ! -v "$1" && exit 2
+	test ! -v "$2" && exit 2
 	if ! [ "${!1}" -ne "${!2}" ]
 	then
+		test -n "${message}" && logErr "${message}"
 		exit 1
 	fi
 }
 function assertReMatch()
 {
+	local message=''
+	if [ "$1" = "-m" ]
+	then
+		shift
+		message="$1"
+		shift
+	fi
 	if ! [[ ${1} =~ ${2} ]]
 	then
+		test -n "${message}" && logErr "${message}"
 		exit 1
 	fi
 }
 function assertReNotMatch()
 {
+	local message=''
+	if [ "$1" = "-m" ]
+	then
+		shift
+		message="$1"
+		shift
+	fi
 	[[ ${1} =~ ${2} ]]
 	local ret=$?  # 0 matched, 1 not matched, 2 malformed regex
 	if [ "${ret}" -ne 1 ]
 	then
+		test -n "${message}" && logErr "${message}"
 		exit 1
 	fi
 }
@@ -88,11 +160,13 @@ function assertCmd()
 {
 	# Parse options
 	local opts
-	opts="$( getopt -o o:e:r:n -l output,error,return:ignore-failed-exec -n "assertCmd" -- "$@" )"
+	opts="$( getopt -o o:e:r:nm:w -l output,error,return:ignore-failed-exec,message,what -n "assertCmd" -- "$@" )"
 	[ "$?" -ne 0 ] && exit 2
 	eval set -- "${opts}"
 	local runCmdOpts=""
 	local -i ignoreFailedExec=1
+	local message=""
+	local -i displayWhat=1
 	while [ -n "$1" ]
 	do
 		case "$1" in
@@ -117,22 +191,58 @@ function assertCmd()
 			(-n|--ignore-failed-exec)
 				ignoreFailedExec=0
 				;;
+			(-m|--message)
+				shift
+				message="$1"
+				;;
+			(-w|--what)
+				displayWhat=0
+				;;
 			(--) shift; break;;
 			(*) break ;;
 		esac
 		shift
 	done
+	local optOutMessage=""
+	local optErrMessage=""
+	local optRetMessage=""
+	local NotExecMessage=""
+	local NotFoundMessage=""
+	if [ "${displayWhat}" -eq 0 ]
+	then
+		optOutMessage="assertCmd: Command's output does not match expected output for '$@'"
+		optErrMessage="assertCmd: Command's error does not match expected error for ''$@'"
+		optRetMessage="assertCmd: Command's returned status does not match the expected for '$@'"
+		NotExecMessage="assertCmd: Command is not executable '$@'"
+		NotFoundMessage="assertCmd: Command can not be found '$@'"
+	fi
+	if [ -n "${message}" ]
+	then
+		optOutMessage="${message}"
+		optErrMessage="${message}"
+		optRetMessage="${message}"
+		NotExecMessage="${message}"
+		NotFoundMessage="${message}"
+	fi
 
 	# Execute
 	runCmd ${runCmdOpts} "$@"
 	local ret=$?
 
 	# Check resuls
-	test "${ignoreFailedExec}" -ne "0" && test "${ret}" -eq 126 && exit 126
-	test "${ignoreFailedExec}" -ne "0" && test "${ret}" -eq 127 && exit 127
-	test -v expectedReturn && assertIntEq resultReturn expectedReturn
-	test -v expectedOutput && assertStrEq resultOutput expectedOutput
-	test -v expectedError  && assertStrEq resultError  expectedError
+	if [ "${ignoreFailedExec}" -ne "0" ] && [ "${ret}" -eq 126 ]
+	then
+		test -n "${NotExecMessage}" && logErr "${NotExecMessage}"
+		exit 126
+	fi
+	if [ "${ignoreFailedExec}" -ne "0" ] && [ "${ret}" -eq 127 ]
+	then
+		test -n "${NotFoundMessage}" && logErr "${NotFoundMessage}"
+		exit 127
+	fi
+	test -v expectedReturn && assertIntEq -m "${optRetMessage}" resultReturn expectedReturn
+	test -v expectedOutput && assertStrEq -m "${optOutMessage}" resultOutput expectedOutput
+	test -v expectedError  && assertStrEq -m "${optErrMessage}" resultError  expectedError
 	return 0
 }
 function logInfo()
