@@ -13,6 +13,18 @@ function tearDown()
 	echo "DOWN"
 }
 
+# setUpOnce runs only once per tests script, before running any test in the file.
+function setUpOnce()
+{
+	echo "STARTING"
+}
+
+# tearDownOnce runs only once per tests script, after running all the tests in the file.
+function tearDownOnce()
+{
+	echo "ENDED"
+}
+
 # Tests
 # They are NOT executed in order appearing here.
 # They are usually executed in alphabethical order as they are sorted by the shell

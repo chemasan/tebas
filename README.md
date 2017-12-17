@@ -56,17 +56,21 @@ FAILED 3 tests
 
 ## TODO
  - [x] Allow using custom function names for fixtures to avoid function name collisions
- - [ ] setUpOnce and tearDownOnce fixtures
+ - [x] setUpOnce and tearDownOnce fixtures
+ - [x] Abort the test if setUp or setUpOnce fails
+ - [ ] Add cleanUp and cleanUpOnce
  - [x] Prefix internal function names to mitigate the possibility of function name collisions
  - [ ] Accept more than one test file in arguments
  - [ ] Search for test files automatically if none has been provided as arguments
  - [ ] Reports
  - [ ] Add optional message argument to assert functions
  - [ ] Add some sort of timeout anotation
- - [ ] Add some sort of anotation to set setup and teardown per test
+ - [ ] Add some sort of anotation to set setup, teardown and cleanup per test
  - [ ] Add some sort of anotation to indicate expected exit
  - [ ] Add some sort of anotation to indicate description
+ - [x] CURRENT_TEST variable accessible in the tests code
  - [x] logInfo, logWarn and logErr helper functions
+ - [x] Make loggers print the current test, not the current function
  - [ ] asssertCmd helper function
  - [x] assertStrEq, assertStrNotEq, assertIntEq, assertIntNotEq, helper functions using references
  - [x] assertReMatch, assertReNotMatch
@@ -77,3 +81,4 @@ FAILED 3 tests
  - [x] option to enable tracing with -x
  - [x] Replace -x and -s with verbosity levels
  - [ ] Reestructure README
+ - [ ] Functional tests

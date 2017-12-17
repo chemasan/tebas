@@ -5,17 +5,31 @@
 
 TEBAS_DEFAULT_SETUP="mySetupFunction"
 TEBAS_DEFAULT_TEARDOWN="myTearDownFunction"
+TEBAS_DEFAULT_SETUPONCE="mySetUpOnceFunction"
+TEBAS_DEFAULT_TEARDOWNONCE="myTearDownOnceFunction"
 
 function mySetupFunction()
 {
-	echo UP
+	logInfo UP
 }
 
-function myTearDownFunction() {
-	echo DOWN
+function myTearDownFunction()
+{
+	logInfo DOWN
+}
+
+function mySetUpOnceFunction()
+{
+	logInfo STARTING
+}
+
+function myTearDownOnceFunction()
+{
+	logInfo ENDED
 }
 
 function testDummy()
 {
+	logWarn "Running the test '${CURRENT_TEST}'"
 	pass
 }

@@ -21,7 +21,7 @@ function fail()
 {
 	if [ -n "$1" ]
 	then
-		echo -ne "[ ${LIGHT_RED}ERROR${NOCOLOR} ] ${FUNCNAME[1]} - "
+		echo -ne "[ ${LIGHT_RED}ERROR${NOCOLOR} ] ${CURRENT_TEST} - "
 		echo "$1"
 	fi
 	exit 1
@@ -86,17 +86,17 @@ function assertReNotMatch()
 }
 function logInfo()
 {
-	echo -ne "[ ${LIGHT_BLUE}INFO${NOCOLOR}  ] ${FUNCNAME[1]} - "
+	echo -ne "[ ${LIGHT_BLUE}INFO${NOCOLOR}  ] ${CURRENT_TEST} - "
 	echo "$1"
 }
 function logWarn()
 {
-	echo -ne "[ ${YELLOW}WARNING${NOCOLOR}] ${FUNCNAME[1]} - "
+	echo -ne "[${YELLOW}WARNING${NOCOLOR}] ${CURRENT_TEST} - "
 	echo "$1"
 }
 function logErr()
 {
-	echo -ne "[ ${LIGHT_RED}ERROR${NOCOLOR} ] ${FUNCNAME[1]} - "
+	echo -ne "[ ${LIGHT_RED}ERROR${NOCOLOR} ] ${CURRENT_TEST} - "
 	echo "$1"
 }
 function runCmd()
@@ -241,12 +241,32 @@ function tebasMain()
 	fi
 	local tebasTestSetupFunction="${TEBAS_DEFAULT_SETUP:-setUp}"
 	local tebasTestTeardownFunction="${TEBAS_DEFAULT_TEARDOWN:-tearDown}"
+	local tebasTestSetupOnceFunction="${TEBAS_DEFAULT_SETUPONCE:-setUpOnce}"
+	local tebasTestTeardownOnceFunction="${TEBAS_DEFAULT_TEARDOWNONCE:-tearDownOnce}"
+	declare -g CURRENT_TEST=''
+	if declare -F "${tebasTestSetupOnceFunction}" >/dev/null
+	then
+		CURRENT_TEST="${tebasTestSetupOnceFunction}"
+		if ! tebasRunFunction "${tebasTestSetupOnceFunction}"
+		then
+			set +x
+			echo "Ran 0 tests"
+			echo -e "${RED}ERROR ${tebasTestSetupOnceFunction} failed. Test suit aborted.${NOCOLOR}"
+			exit 1
+		fi
+		set +x
+	fi
 	for tebasTestFunction in ${tebasOptTestsToRun}
 	do
 		(
+			CURRENT_TEST="${tebasTestFunction}"
 			if declare -F "${tebasTestSetupFunction}" >/dev/null
 			then
-				tebasRunFunction "${tebasTestSetupFunction}"
+				if ! tebasRunFunction "${tebasTestSetupFunction}"
+				then
+					set +x
+					fail "Failed setUp. Test aborted."
+				fi
 				set +x
 			fi
 			if declare -F "${tebasTestTeardownFunction}" >/dev/null
@@ -265,6 +285,12 @@ function tebasMain()
 			echo -e "[${RED}FAILED${NOCOLOR} ] ${tebasTestFunction}"
 		fi
 	done
+	if declare -F "${tebasTestTeardownOnceFunction}" >/dev/null
+	then
+		CURRENT_TEST="${tebasTestTeardownOnceFunction}"
+		tebasRunFunction "${tebasTestTeardownOnceFunction}"
+		set +x
+	fi
 
 	if [ ${tebasOptVerbosity} -gt 0 ] || [ ${tebasFailedTests} -gt 0 ]
 	then
