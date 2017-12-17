@@ -187,14 +187,23 @@ function tebasParseOptions()
 }
 function tebasRunFunction()
 {
-	local functionToRun="$1"
+	local notrace=1
+	if [ "$1" = "-n" ]
+	then
+		notrace=0
+		shift
+	fi
 	if [ "${tebasOptVerbosity}" -ge 2 ]
 	then
-		[ "${tebasOptVerbosity}" -ge 3 ] && set -x
-		${functionToRun}
+		[ "${tebasOptVerbosity}" -ge 3 ] && [ "${notrace}" -ne 0 ] && set -x
+
+		"$@"
 	else
-		${functionToRun} >/dev/null 2>&1
+		"$@" >/dev/null 2>&1
 	fi
+	local returned=$?
+	set +x
+	return ${returned}
 }
 
 function tebasSetupColors()
@@ -217,6 +226,26 @@ function tebasSetupColors()
 		declare -gr BLUE=''
 		declare -gr LIGTH_RED=''
 		declare -gr LIGTH_BLUE=''
+	fi
+}
+function tebasOnTestExit()
+{
+	local tebasTestTeardownFunction="$1"
+	local tebasTestCleanUpFunction="$2"
+
+	if declare -F "${tebasTestTeardownFunction}" >/dev/null
+	then
+		if ! tebasRunFunction "${tebasTestTeardownFunction}"
+		then
+			tebasRunFunction -n logWarn "Failed ${tebasTestTeardownFunction}."
+		fi
+	fi
+	if declare -F "${tebasTestCleanUpFunction}" >/dev/null
+	then
+		if ! tebasRunFunction "${tebasTestCleanUpFunction}"
+		then
+			tebasRunFunction -n logWarn "Failed ${tebasTestCleanUpFunction}."
+		fi
 	fi
 }
 
@@ -243,36 +272,41 @@ function tebasMain()
 	local tebasTestTeardownFunction="${TEBAS_DEFAULT_TEARDOWN:-tearDown}"
 	local tebasTestSetupOnceFunction="${TEBAS_DEFAULT_SETUPONCE:-setUpOnce}"
 	local tebasTestTeardownOnceFunction="${TEBAS_DEFAULT_TEARDOWNONCE:-tearDownOnce}"
+	local tebasTestCleanUpFunction="${TEBAS_DEFAULT_CLEANUP:-cleanUp}"
+	local tebasTestCleanUpOnceFunction="${TEBAS_DEFAULT_CLEANUPONCE:-cleanUpOnce}"
 	declare -g CURRENT_TEST=''
 	if declare -F "${tebasTestSetupOnceFunction}" >/dev/null
 	then
 		CURRENT_TEST="${tebasTestSetupOnceFunction}"
 		if ! tebasRunFunction "${tebasTestSetupOnceFunction}"
 		then
-			set +x
 			echo "Ran 0 tests"
 			echo -e "${RED}ERROR ${tebasTestSetupOnceFunction} failed. Test suit aborted.${NOCOLOR}"
+			if declare -F "${tebasTestCleanUpOnceFunction}" >/dev/null
+			then
+				CURRENT_TEST="${tebasTestCleanUpOnceFunction}"
+				if ! tebasRunFunction "${tebasTestCleanUpOnceFunction}"
+				then
+					echo -e "${YELLOW}WARNING ${tebasTestCleanUpOnceFunction} failed.${NOCOLOR}"
+				fi
+			fi
 			exit 1
 		fi
-		set +x
 	fi
 	for tebasTestFunction in ${tebasOptTestsToRun}
 	do
 		(
 			CURRENT_TEST="${tebasTestFunction}"
+
+			trap "set +x;tebasOnTestExit '' '${tebasTestCleanUpFunction}'" EXIT
 			if declare -F "${tebasTestSetupFunction}" >/dev/null
 			then
 				if ! tebasRunFunction "${tebasTestSetupFunction}"
 				then
-					set +x
-					fail "Failed setUp. Test aborted."
+					tebasRunFunction -n fail "Failed ${tebasTestSetupFunction}. Test aborted."
 				fi
-				set +x
 			fi
-			if declare -F "${tebasTestTeardownFunction}" >/dev/null
-			then
-				trap "set +x;tebasRunFunction '${tebasTestTeardownFunction}'" EXIT
-			fi
+			trap "set +x;tebasOnTestExit '${tebasTestTeardownFunction}' '${tebasTestCleanUpFunction}'" EXIT
 
 			tebasRunFunction "${tebasTestFunction}"
 		)
@@ -288,8 +322,18 @@ function tebasMain()
 	if declare -F "${tebasTestTeardownOnceFunction}" >/dev/null
 	then
 		CURRENT_TEST="${tebasTestTeardownOnceFunction}"
-		tebasRunFunction "${tebasTestTeardownOnceFunction}"
-		set +x
+		if ! tebasRunFunction "${tebasTestTeardownOnceFunction}"
+		then
+			tebasRunFunction -n logWarn "Failed ${tebasTestTeardownOnceFunction}."
+		fi
+	fi
+	if declare -F "${tebasTestCleanUpOnceFunction}" >/dev/null
+	then
+		CURRENT_TEST="${tebasTestCleanUpOnceFunction}"
+		if ! tebasRunFunction "${tebasTestCleanUpOnceFunction}"
+		then
+			tebasRunFunction -n logWarn "Failed ${tebasTestCleanUpOnceFunction}."
+		fi
 	fi
 
 	if [ ${tebasOptVerbosity} -gt 0 ] || [ ${tebasFailedTests} -gt 0 ]

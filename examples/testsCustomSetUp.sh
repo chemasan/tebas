@@ -7,6 +7,8 @@ TEBAS_DEFAULT_SETUP="mySetupFunction"
 TEBAS_DEFAULT_TEARDOWN="myTearDownFunction"
 TEBAS_DEFAULT_SETUPONCE="mySetUpOnceFunction"
 TEBAS_DEFAULT_TEARDOWNONCE="myTearDownOnceFunction"
+TEBAS_DEFAULT_CLEANUP="myCleanUpFunction"
+TEBAS_DEFAULT_CLEANUPONCE="myCleanUpOnceFunction"
 
 function mySetupFunction()
 {
@@ -26,6 +28,16 @@ function mySetUpOnceFunction()
 function myTearDownOnceFunction()
 {
 	logInfo ENDED
+}
+
+function myCleanUpFunction()
+{
+	logInfo CLEANING
+}
+
+function myCleanUpOnceFunction()
+{
+	logInfo "ALL CLEAN"
 }
 
 function testDummy()

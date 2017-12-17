@@ -7,22 +7,30 @@ function setUp()
 {
 	echo "UP"
 }
-# tearDown runs after every test
+# tearDown runs after every test, unless setUp failed (if exists and returned with status != 0)
 function tearDown()
 {
 	echo "DOWN"
 }
-
+# cleanUp runs after every test, after tearDown (if exists), even if setUp failed.
+function cleanUp()
+{
+	echo "CLEANING"
+}
 # setUpOnce runs only once per tests script, before running any test in the file.
 function setUpOnce()
 {
 	echo "STARTING"
 }
-
 # tearDownOnce runs only once per tests script, after running all the tests in the file.
 function tearDownOnce()
 {
 	echo "ENDED"
+}
+# cleanUpOnce runs only once per test script, after running all the tests in the file and its tearDownOnce, or after a failed setUpOnce.
+function cleanUpOnce()
+{
+	echo "ALL CLEAN"
 }
 
 # Tests

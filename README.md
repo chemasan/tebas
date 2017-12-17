@@ -11,9 +11,15 @@ Write a file with your tests, each test must be a function which name begins wit
 If a test function return code is zero or it calls "exit 0", the test succeeds.
 If a test function return code is non-zero or it calls exit with a non-zero argument, the test fails.
 
-If a function named 'setUp' exists, it will be executed before each test.
-If a function named 'tearDown' exists, it will be executed after each test.
-Different function names can be used for fixtures by setting the variables TEBAS_DEFAULT_SETUP and TEBAS_DEFAULT_TEARDOWN, [example](examples/testsCustomSetUp.sh).
+If a function named 'setUp' exists it will run before each test.
+If a function named 'tearDown' exists it will run after each test unless an existing setup failed.
+If a function named 'cleanUp' exists it will run after each test's tearDown or after the test if there is no tearDown, even if an existing setUp or tearDown failed.
+If a function named 'setUpOnce' exists it will run only once before any test in the file. If it fails, execution will be aborted.
+If a function named 'tearDownOnce' exists it will run once after all the tests in the file have run.
+If a function named 'cleanUpOnce' exists it will run once after a failed setUpOnce, after an existing tearDownOnce (failed or not) or after all tests have run if there is no tearDownOnce.
+Different function names can be used for fixtures by setting the variables TEBAS_DEFAULT_SETUP, TEBAS_DEFAULT_TEARDOWN, TEBAS_DEFAULT_SETUPONCE, TEBAS_DEFAULT_TEARDOWNONCE, TEBAS_DEFAULT_CLEANUP and TEBAS_DEFAULT_CLEANUPONCE  [example](examples/testsCustomSetUp.sh).
+
+The variable CURRENT_TEST contains the name of the current running during each test execution, it's setUp amd tearDown.
 
 Tebas provides helper functions that are available to be used in the tests:
  * assert \<command\> \[args..\] - Executes the command and checks the return code is 0. If the check fails it aborts the execution (calling _exit 1_). Square brakets or the _test_ command can be used as arguments for typical _if_ like conditional expressions (see _man test_ or _help test_)
@@ -58,7 +64,7 @@ FAILED 3 tests
  - [x] Allow using custom function names for fixtures to avoid function name collisions
  - [x] setUpOnce and tearDownOnce fixtures
  - [x] Abort the test if setUp or setUpOnce fails
- - [ ] Add cleanUp and cleanUpOnce
+ - [x] Add cleanUp and cleanUpOnce
  - [x] Prefix internal function names to mitigate the possibility of function name collisions
  - [ ] Accept more than one test file in arguments
  - [ ] Search for test files automatically if none has been provided as arguments
