@@ -106,3 +106,8 @@ function testRunCmd()
 	assertTrue "${myout}" = "standard message"
 	assertTrue "${myerr}" = "error message"
 }
+function testWithAnnotations()
+{
+	@description "This is a test with annotations"
+	assert true
+}

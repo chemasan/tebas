@@ -303,7 +303,15 @@ function runCmd()
 	test -R errvar && errvar="$(cat ${errfile})" && rm -f "${errfile}"
 	return ${retval}
 }
-
+#Annotations
+function @description
+{
+	:
+}
+function @shouldFail
+{
+	:
+}
 #core functions
 function tebasPrintHelp()
 {
@@ -409,8 +417,45 @@ function tebasOnTestExit()
 		fi
 	fi
 }
+function tebasGetTestAnnotations()
+{
+	local functionName="$1"
 
-#main
+	declare -f "${functionName}" | while read line
+	do
+		if [[ ${line} =~ ^[[:blank:]]*\@([a-zA-Z0-9]+)([[:blank:]]+([^\#\;\'\"]*|\"[^\"]*\"|\'[^\']*\'))?([\s\;]*)$ ]]
+		then
+			local key="${BASH_REMATCH[1]%% }"
+			local value="${BASH_REMATCH[3]%% }"
+			value="${value## }"
+			if [[ ${value} =~ ^\"([^\"]*)\"$ ]] || [[ ${value} =~ ^\'([^\']*)\'$ ]]
+			then
+				value="${BASH_REMATCH[1]}"
+			fi
+			echo "${key}=${value}"
+		fi
+	done
+}
+function tebasListHasKey()
+{
+	local targetKey="$1"
+	local keyList="$2"
+	local key
+	local value
+
+	for line in "${keyList}"
+	do
+		IFS=\=  read key value <<< "${line}"
+		if [ "${key}" = "${targetKey}" ]
+		then
+			echo "${value}"
+			return 0
+		fi
+	done
+	return 1
+}
+
+# main
 function tebasMain()
 {
 	tebasParseOptions "$@"
@@ -435,6 +480,7 @@ function tebasMain()
 	local tebasTestTeardownOnceFunction="${TEBAS_DEFAULT_TEARDOWNONCE:-tearDownOnce}"
 	local tebasTestCleanUpFunction="${TEBAS_DEFAULT_CLEANUP:-cleanUp}"
 	local tebasTestCleanUpOnceFunction="${TEBAS_DEFAULT_CLEANUPONCE:-cleanUpOnce}"
+	# run setUpOnce
 	declare -g CURRENT_TEST=''
 	if declare -F "${tebasTestSetupOnceFunction}" >/dev/null
 	then
@@ -454,11 +500,19 @@ function tebasMain()
 			exit 1
 		fi
 	fi
+	# run tests loop
 	for tebasTestFunction in ${tebasOptTestsToRun}
 	do
+		# process annotations
+		local tebasTestAnnotations="$(tebasGetTestAnnotations "${tebasTestFunction}")"
+		local tebasAnoValue="$(tebasListHasKey description "${tebasTestAnnotations}")"
+		local tebasTestDescription=""
+		[ -n "${tebasAnoValue}" ] && tebasTestDescription=" - ${tebasAnoValue}"
+		# test subshell
 		(
 			CURRENT_TEST="${tebasTestFunction}"
 
+			# run setUp and register cleanUp and tearDown
 			trap "set +x;tebasOnTestExit '' '${tebasTestCleanUpFunction}'" EXIT
 			if declare -F "${tebasTestSetupFunction}" >/dev/null
 			then
@@ -469,17 +523,20 @@ function tebasMain()
 			fi
 			trap "set +x;tebasOnTestExit '${tebasTestTeardownFunction}' '${tebasTestCleanUpFunction}'" EXIT
 
+			# run test
 			tebasRunFunction "${tebasTestFunction}"
 		)
+		# display test result
 		if [ 0 -eq "$?" ]
 		then
 			((tebasSucceededTests++))
-			[ ${tebasOptVerbosity} -gt 0 ] && echo -e "[${GREEN}SUCCESS${NOCOLOR}] ${tebasTestFunction}"
+			[ ${tebasOptVerbosity} -gt 0 ] && echo -e "[${GREEN}SUCCESS${NOCOLOR}] ${tebasTestFunction}${tebasTestDescription}"
 		else
 			((tebasFailedTests++))
-			echo -e "[${RED}FAILED${NOCOLOR} ] ${tebasTestFunction}"
+			echo -e "[${RED}FAILED${NOCOLOR} ] ${tebasTestFunction}${tebasTestDescription}"
 		fi
 	done
+	# run tearDownOnce
 	if declare -F "${tebasTestTeardownOnceFunction}" >/dev/null
 	then
 		CURRENT_TEST="${tebasTestTeardownOnceFunction}"
@@ -488,6 +545,7 @@ function tebasMain()
 			tebasRunFunction -n logWarn "Failed ${tebasTestTeardownOnceFunction}."
 		fi
 	fi
+	# run cleanUpOnce
 	if declare -F "${tebasTestCleanUpOnceFunction}" >/dev/null
 	then
 		CURRENT_TEST="${tebasTestCleanUpOnceFunction}"
@@ -496,14 +554,13 @@ function tebasMain()
 			tebasRunFunction -n logWarn "Failed ${tebasTestCleanUpOnceFunction}."
 		fi
 	fi
-
+	# display summary
 	if [ ${tebasOptVerbosity} -gt 0 ] || [ ${tebasFailedTests} -gt 0 ]
 	then
 		echo
 		echo "----------------------------------------------------------------------"
 		echo
 	fi
-
 	echo "Ran $((tebasSucceededTests + tebasFailedTests)) tests"
 	echo
 	if [ "${tebasFailedTests}" -gt 0 ]
@@ -516,7 +573,7 @@ function tebasMain()
 	fi
 }
 
-
+# run main
 if [ "${BASH_SOURCE[0]}" = "$0" ]
 then
 	tebasMain "$@"
