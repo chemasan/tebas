@@ -421,7 +421,7 @@ function tebasGetTestAnnotations()
 {
 	local functionName="$1"
 
-	declare -f "${functionName}" | while read line
+	while read line
 	do
 		if [[ ${line} =~ ^[[:blank:]]*\@([a-zA-Z0-9]+)([[:blank:]]+([^\#\;\'\"]*|\"[^\"]*\"|\'[^\']*\'))?([\s\;]*)$ ]]
 		then
@@ -434,7 +434,7 @@ function tebasGetTestAnnotations()
 			fi
 			echo "${key}=${value}"
 		fi
-	done
+	done <<< "$(declare -f "${functionName}")"
 }
 function tebasListHasKey()
 {
@@ -443,15 +443,16 @@ function tebasListHasKey()
 	local key
 	local value
 
-	for line in "${keyList}"
+	while read line
 	do
+
 		IFS=\=  read key value <<< "${line}"
 		if [ "${key}" = "${targetKey}" ]
 		then
 			echo "${value}"
 			return 0
 		fi
-	done
+	done <<< "${keyList}"
 	return 1
 }
 
@@ -526,8 +527,10 @@ function tebasMain()
 			# run test
 			tebasRunFunction "${tebasTestFunction}"
 		)
+		local result=$?
+		tebasListHasKey "shouldFail" "${tebasTestAnnotations}" >/dev/null  && result="$(( ! result ))"
 		# display test result
-		if [ 0 -eq "$?" ]
+		if [ 0 -eq "${result}" ]
 		then
 			((tebasSucceededTests++))
 			[ ${tebasOptVerbosity} -gt 0 ] && echo -e "[${GREEN}SUCCESS${NOCOLOR}] ${tebasTestFunction}${tebasTestDescription}"

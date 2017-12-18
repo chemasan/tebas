@@ -73,7 +73,7 @@ FAILED 3 tests
  - [x] Add optional message argument to assert functions
  - [ ] Add some sort of timeout annotation
  - [ ] Add some sort of annotation to set setup, teardown and cleanup per test
- - [ ] Add some sort of annotation to indicate expected exit
+ - [x] Add some sort of annotation to indicate expected exit
  - [x] Add some sort of annotation to indicate description
  - [x] CURRENT_TEST variable accessible in the tests code
  - [x] logInfo, logWarn and logErr helper functions

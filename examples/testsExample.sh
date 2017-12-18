@@ -108,6 +108,8 @@ function testRunCmd()
 }
 function testWithAnnotations()
 {
+	@shouldFail
 	@description "This is a test with annotations"
-	assert true
+
+	assert false
 }
