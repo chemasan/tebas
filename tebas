@@ -312,6 +312,19 @@ function @shouldFail
 {
 	:
 }
+function @withSetUp
+{
+	:
+}
+function @withTearDown()
+{
+	:
+}
+function @withCleanUp()
+{
+	:
+}
+
 #core functions
 function tebasPrintHelp()
 {
@@ -501,14 +514,19 @@ function tebasMain()
 			exit 1
 		fi
 	fi
-	# run tests loop
+	# Run tests loop
 	for tebasTestFunction in ${tebasOptTestsToRun}
 	do
-		# process annotations
+		# Process annotations
 		local tebasTestAnnotations="$(tebasGetTestAnnotations "${tebasTestFunction}")"
-		local tebasAnoValue="$(tebasListHasKey description "${tebasTestAnnotations}")"
-		local tebasTestDescription=""
-		[ -n "${tebasAnoValue}" ] && tebasTestDescription=" - ${tebasAnoValue}"
+		local tebasTestDescription="$(tebasListHasKey description "${tebasTestAnnotations}")"
+		test -n "${tebasTestDescription}" && tebasTestDescription=" - ${tebasTestDescription}"
+		tebasTestSetupFunction="$(tebasListHasKey withSetUp "${tebasTestAnnotations}")"
+		test -z "${tebasTestSetupFunction}" && tebasTestSetupFunction="${TEBAS_DEFAULT_SETUP:-setUp}"
+		tebasTestTeardownFunction="$(tebasListHasKey withTearDown "${tebasTestAnnotations}")"
+		test -z "${tebasTestTeardownFunction}" && tebasTestTeardownFunction="${TEBAS_DEFAULT_TEARDOWN:-tearDown}"
+		tebasTestCleanUpFunction="$(tebasListHasKey withCleanUp "${tebasTestAnnotations}")"
+		test -z "${tebasTestCleanUpFunction}" && tebasTestCleanUpFunction="${TEBAS_DEFAULT_CLEANUP:-cleanUp}"
 		# test subshell
 		(
 			CURRENT_TEST="${tebasTestFunction}"

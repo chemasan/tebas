@@ -106,10 +106,26 @@ function testRunCmd()
 	assertTrue "${myout}" = "standard message"
 	assertTrue "${myerr}" = "error message"
 }
+# This test succeeds
 function testWithAnnotations()
 {
 	@shouldFail
 	@description "This is a test with annotations"
+	@withSetUp myCustomSetup
+	@withTearDown myCustomTearDown
+	@withCleanUp myCustomCleanUp
 
 	assert false
+}
+function myCustomSetup()
+{
+	echo "UP with custom setup for test ${CURRENT_TEST}"
+}
+function myCustomTearDown()
+{
+	echo "DOWN with custom teardown for test ${CURRENT_TEST}"
+}
+function myCustomCleanUp()
+{
+	echo "CLEANING with custom cleanup for test ${CURRENT_TEST}"
 }
