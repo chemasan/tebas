@@ -37,7 +37,7 @@ function assert()
 	fi
 	if ! "$@"
 	then
-		test -n "${message}" && logErr "${message}"
+		test -n "${message}" && logErr "${message}" || true
 		exit 1
 	fi
 }
@@ -52,7 +52,7 @@ function assertTrue()
 	fi
 	if ! [ "$@" ]
 	then
-		test -n "${message}" && logErr "${message}"
+		test -n "${message}" && logErr "${message}" || true
 		exit 1
 	fi
 }
@@ -65,11 +65,11 @@ function assertStrEq()
 		message="$1"
 		shift
 	fi
-	test ! -v "$1" && exit 2
-	test ! -v "$2" && exit 2
+	test -v "$1" || exit 2
+	test -v "$2" || exit 2
 	if ! [ "${!1}" = "${!2}" ]
 	then
-		test -n "${message}" && logErr "${message}"
+		test -n "${message}" && logErr "${message}" || true
 		exit 1
 	fi
 }
@@ -82,11 +82,11 @@ function assertStrNotEq()
 		message="$1"
 		shift
 	fi
-	test ! -v "$1" && exit 2
-	test ! -v "$2" && exit 2
+	test -v "$1" || exit 2
+	test -v "$2" || exit 2
 	if ! [ "${!1}" != "${!2}" ]
 	then
-		test -n "${message}" && logErr "${message}"
+		test -n "${message}" && logErr "${message}" || true
 		exit 1
 	fi
 }
@@ -99,11 +99,11 @@ function assertIntEq()
 		message="$1"
 		shift
 	fi
-	test ! -v "$1" && exit 2
-	test ! -v "$2" && exit 2
+	test -v "$1" || exit 2
+	test -v "$2" || exit 2
 	if ! [ "${!1}" -eq "${!2}" ]
 	then
-		test -n "${message}" && logErr "${message}"
+		test -n "${message}" && logErr "${message}" || true
 		exit 1
 	fi
 }
@@ -116,11 +116,11 @@ function assertIntNotEq()
 		message="$1"
 		shift
 	fi
-	test ! -v "$1" && exit 2
-	test ! -v "$2" && exit 2
+	test -v "$1" || exit 2
+	test -v "$2" || exit 2
 	if ! [ "${!1}" -ne "${!2}" ]
 	then
-		test -n "${message}" && logErr "${message}"
+		test -n "${message}" && logErr "${message}" || true
 		exit 1
 	fi
 }
@@ -135,7 +135,7 @@ function assertReMatch()
 	fi
 	if ! [[ ${1} =~ ${2} ]]
 	then
-		test -n "${message}" && logErr "${message}"
+		test -n "${message}" && logErr "${message}" || true
 		exit 1
 	fi
 }
@@ -148,8 +148,8 @@ function assertReNotMatch()
 		message="$1"
 		shift
 	fi
-	[[ ${1} =~ ${2} ]]
-	local ret=$?  # 0 matched, 1 not matched, 2 malformed regex
+	local ret  # 0 matched, 1 not matched, 2 malformed regex
+	[[ ${1} =~ ${2} ]] && ret=$? || ret=$?
 	if [ "${ret}" -ne 1 ]
 	then
 		test -n "${message}" && logErr "${message}"
@@ -159,9 +159,7 @@ function assertReNotMatch()
 function assertCmd()
 {
 	# Parse options
-	local opts
-	opts="$( getopt -o o:e:r:nm:w -l output,error,return:ignore-failed-exec,message,what -n "assertCmd" -- "$@" )"
-	[ "$?" -ne 0 ] && exit 2
+	local opts="$( getopt -o o:e:r:nm:w -l output,error,return:ignore-failed-exec,message,what -n "assertCmd" -- "$@" || exit 2)"
 	eval set -- "${opts}"
 	local runCmdOpts=""
 	local -i ignoreFailedExec=1
@@ -226,23 +224,23 @@ function assertCmd()
 	fi
 
 	# Execute
-	runCmd ${runCmdOpts} "$@"
-	local ret=$?
+	local ret
+	runCmd ${runCmdOpts} "$@" && ret=$? || ret=?
 
 	# Check resuls
 	if [ "${ignoreFailedExec}" -ne "0" ] && [ "${ret}" -eq 126 ]
 	then
-		test -n "${NotExecMessage}" && logErr "${NotExecMessage}"
+		test -n "${NotExecMessage}" && logErr "${NotExecMessage}" || true
 		exit 126
 	fi
 	if [ "${ignoreFailedExec}" -ne "0" ] && [ "${ret}" -eq 127 ]
 	then
-		test -n "${NotFoundMessage}" && logErr "${NotFoundMessage}"
+		test -n "${NotFoundMessage}" && logErr "${NotFoundMessage}" || true
 		exit 127
 	fi
-	test -v expectedReturn && assertIntEq -m "${optRetMessage}" resultReturn expectedReturn
-	test -v expectedOutput && assertStrEq -m "${optOutMessage}" resultOutput expectedOutput
-	test -v expectedError  && assertStrEq -m "${optErrMessage}" resultError  expectedError
+	test -v expectedReturn && assertIntEq -m "${optRetMessage}" resultReturn expectedReturn || true
+	test -v expectedOutput && assertStrEq -m "${optOutMessage}" resultOutput expectedOutput || true
+	test -v expectedError  && assertStrEq -m "${optErrMessage}" resultError  expectedError  || true
 	return 0
 }
 function logInfo()
@@ -264,8 +262,7 @@ function runCmd()
 {
 	# Parse options
 	local opts
-	opts="$( getopt -o o:e:r: -l output,error,return: -n "runCmd" -- "$@" )"
-	[ "$?" -ne 0 ] && return 2
+	opts="$( getopt -o o:e:r: -l output,error,return: -n "runCmd" -- "$@" || return 2)"
 	eval set -- "${opts}"
 	while [ -n "$1" ]
 	do
@@ -283,24 +280,22 @@ function runCmd()
 	if [ -R outvar ]
 	then
 		local outfile
-		outfile="$(mktemp)"
-		[ "$?" -ne 0 ] && return 3
+		outfile="$(mktemp || return 3)"
 	fi
 	if [ -R errvar ]
 	then
 		local errfile
-		errfile="$(mktemp)"
-		[ "$?" -ne 0 ] && return 3
+		errfile="$(mktemp || return 3)"
 	fi
 
 	# Execute
-	"$@" 1>${outfile:-/dev/stdout} 2>${errfile:-/dev/stderr}
-	local retval=$?
+	local retval
+	"$@" 1>${outfile:-/dev/stdout} 2>${errfile:-/dev/stderr} && retval=$? || retval=$?
 
 	# Return data and cleanup
-	test -R retvar && retvar=${retval}
-	test -R outvar && outvar="$(cat ${outfile})" && rm -f "${outfile}"
-	test -R errvar && errvar="$(cat ${errfile})" && rm -f "${errfile}"
+	test -R retvar && retvar=${retval} || true
+	test -R outvar && outvar="$(cat ${outfile})" && rm -f "${outfile}" || true
+	test -R errvar && errvar="$(cat ${errfile})" && rm -f "${errfile}" || true
 	return ${retval}
 }
 #Annotations
@@ -351,8 +346,7 @@ function tebasParseOptions()
 	declare -g tebasOptTestsToRun=""
 	declare -g tebasArgTestfile=""
 
-	local opts="$( getopt -o vht: -l verbose,help,tests: -n "$(basename $0)" -- "$@" )"
-	[ "$?" -ne 0 ] && exit 1
+	local opts="$( getopt -o vht: -l verbose,help,tests: -n "$(basename $0)" -- "$@" || exit 1)"
 	eval set -- "${opts}"
 	while [ -n "$1" ]
 	do
@@ -375,15 +369,15 @@ function tebasRunFunction()
 		notrace=0
 		shift
 	fi
+	local returned
 	if [ "${tebasOptVerbosity}" -ge 2 ]
 	then
-		[ "${tebasOptVerbosity}" -ge 3 ] && [ "${notrace}" -ne 0 ] && set -x
+		[ "${tebasOptVerbosity}" -ge 3 ] && [ "${notrace}" -ne 0 ] && set -x || true
 
-		"$@"
+		"$@" && returned=$? || returned=$?
 	else
-		"$@" >/dev/null 2>&1
+		"$@" >/dev/null 2>&1  && returned=$? || returned=$?
 	fi
-	local returned=$?
 	set +x
 	return ${returned}
 }
@@ -427,8 +421,7 @@ function tebasOnTestExit()
 		if ! tebasRunFunction "${tebasTestCleanUpFunction}"
 		then
 			tebasRunFunction -n logWarn "Failed ${tebasTestCleanUpFunction}."
-		fi
-	fi
+		fi fi
 }
 function tebasGetTestAnnotations()
 {
@@ -474,8 +467,8 @@ function tebasMain()
 {
 	tebasParseOptions "$@"
 
-	[ -z "${tebasArgTestfile}" ] && die "The argument 'filename' is mandatory. Run -h for usage help."
-	[ ! -r "${tebasArgTestfile}" ] && die "Cant' read '${tebasArgTestfile}'. Does the file exists and is readable?"
+	[ -z "${tebasArgTestfile}" ] && die "The argument 'filename' is mandatory. Run -h for usage help." || true
+	[ ! -r "${tebasArgTestfile}" ] && die "Cant' read '${tebasArgTestfile}'. Does the file exists and is readable?" || true
 
 	tebasSetupColors
 
@@ -486,7 +479,7 @@ function tebasMain()
 
 	if [ -z "${tebasOptTestsToRun}" ]
 	then
-		tebasOptTestsToRun="$(declare -F | grep "^declare -f test" | cut -d\   -f3)"
+		tebasOptTestsToRun="$(declare -F | grep "^declare -f test" | cut -d\   -f3 || true)"
 	fi
 	local tebasTestSetupFunction="${TEBAS_DEFAULT_SETUP:-setUp}"
 	local tebasTestTeardownFunction="${TEBAS_DEFAULT_TEARDOWN:-tearDown}"
@@ -519,15 +512,16 @@ function tebasMain()
 	do
 		# Process annotations
 		local tebasTestAnnotations="$(tebasGetTestAnnotations "${tebasTestFunction}")"
-		local tebasTestDescription="$(tebasListHasKey description "${tebasTestAnnotations}")"
-		test -n "${tebasTestDescription}" && tebasTestDescription=" - ${tebasTestDescription}"
-		tebasTestSetupFunction="$(tebasListHasKey withSetUp "${tebasTestAnnotations}")"
-		test -z "${tebasTestSetupFunction}" && tebasTestSetupFunction="${TEBAS_DEFAULT_SETUP:-setUp}"
-		tebasTestTeardownFunction="$(tebasListHasKey withTearDown "${tebasTestAnnotations}")"
-		test -z "${tebasTestTeardownFunction}" && tebasTestTeardownFunction="${TEBAS_DEFAULT_TEARDOWN:-tearDown}"
-		tebasTestCleanUpFunction="$(tebasListHasKey withCleanUp "${tebasTestAnnotations}")"
-		test -z "${tebasTestCleanUpFunction}" && tebasTestCleanUpFunction="${TEBAS_DEFAULT_CLEANUP:-cleanUp}"
+		local tebasTestDescription="$(tebasListHasKey description "${tebasTestAnnotations}" || true)"
+		test -n "${tebasTestDescription}" && tebasTestDescription=" - ${tebasTestDescription}" || true
+		tebasTestSetupFunction="$(tebasListHasKey withSetUp "${tebasTestAnnotations}" || true)"
+		test -z "${tebasTestSetupFunction}" && tebasTestSetupFunction="${TEBAS_DEFAULT_SETUP:-setUp}" || true
+		tebasTestTeardownFunction="$(tebasListHasKey withTearDown "${tebasTestAnnotations}" || true)"
+		test -z "${tebasTestTeardownFunction}" && tebasTestTeardownFunction="${TEBAS_DEFAULT_TEARDOWN:-tearDown}" || true
+		tebasTestCleanUpFunction="$(tebasListHasKey withCleanUp "${tebasTestAnnotations}" || true)"
+		test -z "${tebasTestCleanUpFunction}" && tebasTestCleanUpFunction="${TEBAS_DEFAULT_CLEANUP:-cleanUp}" || true
 		# test subshell
+		local result
 		(
 			CURRENT_TEST="${tebasTestFunction}"
 
@@ -543,17 +537,16 @@ function tebasMain()
 			trap "set +x;tebasOnTestExit '${tebasTestTeardownFunction}' '${tebasTestCleanUpFunction}'" EXIT
 
 			# run test
-			tebasRunFunction "${tebasTestFunction}"
-		)
-		local result=$?
-		tebasListHasKey "shouldFail" "${tebasTestAnnotations}" >/dev/null  && result="$(( ! result ))"
+			tebasRunFunction "${tebasTestFunction}" && return $? || return $?
+		) && result=$? || result=$?
+		tebasListHasKey "shouldFail" "${tebasTestAnnotations}" >/dev/null  && result="$(( ! result ))" || true
 		# display test result
 		if [ 0 -eq "${result}" ]
 		then
-			((tebasSucceededTests++))
-			[ ${tebasOptVerbosity} -gt 0 ] && echo -e "[${GREEN}SUCCESS${NOCOLOR}] ${tebasTestFunction}${tebasTestDescription}"
+			((tebasSucceededTests++)) || true
+			[ ${tebasOptVerbosity} -gt 0 ] && echo -e "[${GREEN}SUCCESS${NOCOLOR}] ${tebasTestFunction}${tebasTestDescription}" || true
 		else
-			((tebasFailedTests++))
+			((tebasFailedTests++)) || true
 			echo -e "[${RED}FAILED${NOCOLOR} ] ${tebasTestFunction}${tebasTestDescription}"
 		fi
 	done

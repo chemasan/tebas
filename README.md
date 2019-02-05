@@ -89,3 +89,4 @@ FAILED 3 tests
  - [x] Replace -x and -s with verbosity levels
  - [ ] Ree-structure README
  - [ ] Functional tests
+ - [ ] Randomize tests execution orders
