@@ -462,6 +462,19 @@ function tebasListHasKey()
 	return 1
 }
 
+function printTrace()
+{
+	local tracelog="$1"
+
+	if [ "${tebasOptVerbosity}" -ge 3 ]
+	then
+		echo "####### TRACE LOG BEGIN #######" >&2
+		cat "${tracelog}" >&2
+		echo "#######  TRACE LOG END  #######" >&2
+		truncate --size 0 "${tracelog}"
+	fi
+}
+
 # main
 function tebasMain()
 {
@@ -487,6 +500,13 @@ function tebasMain()
 	local tebasTestTeardownOnceFunction="${TEBAS_DEFAULT_TEARDOWNONCE:-tearDownOnce}"
 	local tebasTestCleanUpFunction="${TEBAS_DEFAULT_CLEANUP:-cleanUp}"
 	local tebasTestCleanUpOnceFunction="${TEBAS_DEFAULT_CLEANUPONCE:-cleanUpOnce}"
+	local tracelog=""
+	if [ "${tebasOptVerbosity}" -ge 3 ]
+	then
+		tracelog="$(mktemp || true)"
+		exec 3<>${tracelog}
+		export BASH_XTRACEFD=3
+	fi
 	# run setUpOnce
 	declare -g CURRENT_TEST=''
 	if declare -F "${tebasTestSetupOnceFunction}" >/dev/null
@@ -504,9 +524,11 @@ function tebasMain()
 					echo -e "${YELLOW}WARNING ${tebasTestCleanUpOnceFunction} failed.${NOCOLOR}"
 				fi
 			fi
+			printTrace "${tracelog}"
 			exit 1
 		fi
 	fi
+	printTrace "${tracelog}"
 	# Run tests loop
 	for tebasTestFunction in ${tebasOptTestsToRun}
 	do
@@ -540,6 +562,7 @@ function tebasMain()
 			tebasRunFunction "${tebasTestFunction}" && return $? || return $?
 		) && result=$? || result=$?
 		tebasListHasKey "shouldFail" "${tebasTestAnnotations}" >/dev/null  && result="$(( ! result ))" || true
+		printTrace "${tracelog}"
 		# display test result
 		if [ 0 -eq "${result}" ]
 		then
@@ -568,6 +591,8 @@ function tebasMain()
 			tebasRunFunction -n logWarn "Failed ${tebasTestCleanUpOnceFunction}."
 		fi
 	fi
+	printTrace "${tracelog}"
+	rm -f "${tracelog}"
 	# display summary
 	if [ ${tebasOptVerbosity} -gt 0 ] || [ ${tebasFailedTests} -gt 0 ]
 	then

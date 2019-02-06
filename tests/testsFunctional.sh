@@ -33,6 +33,10 @@ set -v
 # Check tebas works as expected even when the source enables errexit (set -e)
 ./tebas	-vv tests/resources/testsErrexit.sh >/dev/null 2>&1
 
+# Check incresing verbosity (enables +x on tests) doesn't make the tests that check stderr to fail
+./tebas	-vvv tests/resources/testsErrexit.sh >/dev/null 2>&1
+
+
 set +v
 echo
 echo -e "${GREEN}SUCCEDED${NOCOLOR} functional tests"
