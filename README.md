@@ -70,6 +70,7 @@ FAILED 3 tests
  - [ ] Accept more than one test file in arguments
  - [ ] Search for test files automatically if none has been provided as arguments
  - [ ] Reports
+ - [ ] Coverage
  - [x] Add optional message argument to assert functions
  - [ ] Add some sort of timeout annotation
  - [x] Add some sort of annotation to set setup, teardown and cleanup per test

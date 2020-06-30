@@ -225,7 +225,7 @@ function assertCmd()
 
 	# Execute
 	local ret
-	runCmd ${runCmdOpts} "$@" && ret=$? || ret=?
+	runCmd ${runCmdOpts} "$@" && ret=$? || ret=$?
 
 	# Check resuls
 	if [ "${ignoreFailedExec}" -ne "0" ] && [ "${ret}" -eq 126 ]
