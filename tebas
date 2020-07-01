@@ -225,7 +225,7 @@ function assertCmd()
 
 	# Execute
 	local ret
-	runCmd ${runCmdOpts} "$@" && ret=$? || ret=$?
+	runCmd ${runCmdOpts} -- "$@" && ret=$? || ret=$?
 
 	# Check resuls
 	if [ "${ignoreFailedExec}" -ne "0" ] && [ "${ret}" -eq 126 ]
@@ -297,6 +297,30 @@ function runCmd()
 	test -R outvar && outvar="$(cat ${outfile})" && rm -f "${outfile}" || true
 	test -R errvar && errvar="$(cat ${errfile})" && rm -f "${errfile}" || true
 	return ${retval}
+}
+function include()
+{
+	local srcfile="${1:-}"
+
+	if [ -z "${srcfile}" ]
+	then
+		echo "include: error, no file to include" >&2
+		echo "usage: include <file>" >&2
+		return 1
+	fi
+
+	echo "$(readlink -f ${BASH_SOURCE[1]})"
+	local curfile="$(readlink -f ${BASH_SOURCE[1]})"
+	local curfiledir="$(dirname "${curfile}")"
+	pushd "${curfiledir}" &>/dev/null
+		if ! [ -r "${srcfile}" ]
+		then
+			echo "include: ERROR, cant read file '${srcfile}' referenced from ${curfile}" >&2
+			popd &>/dev/null
+			return 1
+		fi
+		source "${srcfile}"
+	popd &>/dev/null
 }
 #Annotations
 function @description
