@@ -38,6 +38,7 @@ Tebas provides helper functions that are available to be used in the tests:
  * logWarn \[message\] - Prints message to stdout prefixed by a WARNING label and the name of the current test
  * logErr \[message\] - Prints message to stdout prefixed by an ERROR label and the name of the current test
  * runCmd \[-o|--output varname\] \[-e|--error varname\] \[-r|--return varname\] \<command\> \[args...\] - Executes the command and captures its outputs in the indicated variables. The _--output_ option captures the comand's stdout in the indicated variable, _--error_ captures the stderr and --return captures the command's exit status code. If the command's stdout or stderr is not capture by enabling the _--output_ or _--error_ then it will be printed as usual.
+ * include \<path\> - Executes "source" to a file indicated by it's path relative to the current file (the tests file) instead the current working directory.
 
 Note that the log functions print to stdout so tebas has to run with flag '-vv' in order to display the messages.
 

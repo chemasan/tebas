@@ -308,8 +308,6 @@ function include()
 		echo "usage: include <file>" >&2
 		return 1
 	fi
-
-	echo "$(readlink -f ${BASH_SOURCE[1]})"
 	local curfile="$(readlink -f ${BASH_SOURCE[1]})"
 	local curfiledir="$(dirname "${curfile}")"
 	pushd "${curfiledir}" &>/dev/null
