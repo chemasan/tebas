@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+
 #
 # Copyright (c) 2017 Jose Manuel Sanchez Madrid. This file is licensed under MIT license. See file LICENSE for details.
 #
@@ -37,6 +38,9 @@ function assert()
 	fi
 	if ! "$@"
 	then
+		logErr "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - Failed assertion ${FUNCNAME[0]}"
+		logInfo "Arguments expand to:"
+		logInfo "${DIM}${*@Q}${NOCOLOR}"
 		test -n "${message}" && logErr "${message}" || true
 		exit 1
 	fi
@@ -52,6 +56,13 @@ function assertTrue()
 	fi
 	if ! [ "$@" ]
 	then
+		logErr "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - Failed assertion ${FUNCNAME[0]}"
+		logInfo "Arguments expand to:"
+		local word
+		for word in "$@"
+		do
+			logInfo "${DIM}${word@Q}${NOCOLOR}"
+		done
 		test -n "${message}" && logErr "${message}" || true
 		exit 1
 	fi
@@ -65,10 +76,15 @@ function assertStrEq()
 		message="$1"
 		shift
 	fi
-	test -v "$1" || exit 2
-	test -v "$2" || exit 2
+	test -v "$1" || fail "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - The given variable name is not set: '${1}'"
+	test -v "$2" || fail "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - The given variable name is not set: '${1}'"
 	if ! [ "${!1}" = "${!2}" ]
 	then
+		logErr "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - Failed assertion ${FUNCNAME[0]}  $@"
+		logInfo -e "Variable '${1}' expands to:"
+		logInfo "${DIM}${!1@Q}${NOCOLOR}"
+		logInfo "Meanwhile variable '${2}' expands to: "
+		logInfo "${DIM}${!2@Q}${NOCOLOR}"
 		test -n "${message}" && logErr "${message}" || true
 		exit 1
 	fi
@@ -82,10 +98,15 @@ function assertStrNotEq()
 		message="$1"
 		shift
 	fi
-	test -v "$1" || exit 2
-	test -v "$2" || exit 2
+	test -v "$1" || fail "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - The given variable name is not set: '${1}'"
+	test -v "$2" || fail "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - The given variable name is not set: '${1}'"
 	if ! [ "${!1}" != "${!2}" ]
 	then
+		logErr "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - Failed assertion ${FUNCNAME[0]} $@"
+		logInfo "Variable '${1}' expands to:"
+		logInfo "${DIM}${!1@Q}${NOCOLOR}"
+		logInfo "Meanwhile variable '${2}' expands to: "
+		logInfo "${DIM}${!2@Q}${NOCOLOR}"
 		test -n "${message}" && logErr "${message}" || true
 		exit 1
 	fi
@@ -99,10 +120,15 @@ function assertIntEq()
 		message="$1"
 		shift
 	fi
-	test -v "$1" || exit 2
-	test -v "$2" || exit 2
+	test -v "$1" || fail "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - The given variable name is not set: '${1}'"
+	test -v "$2" || fail "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - The given variable name is not set: '${1}'"
 	if ! [ "${!1}" -eq "${!2}" ]
 	then
+		logErr "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - Failed assertion ${FUNCNAME[0]} $@"
+		logInfo "Variable '${1}' expands to:"
+		logInfo "${DIM}${!1@Q}${NOCOLOR}"
+		logInfo "Meanwhile variable '${2}' expands to: "
+		logInfo "${DIM}${!2@Q}${NOCOLOR}"
 		test -n "${message}" && logErr "${message}" || true
 		exit 1
 	fi
@@ -116,10 +142,15 @@ function assertIntNotEq()
 		message="$1"
 		shift
 	fi
-	test -v "$1" || exit 2
-	test -v "$2" || exit 2
+	test -v "$1" || fail "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - The given variable name is not set: '${1}'"
+	test -v "$2" || fail "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - The given variable name is not set: '${1}'"
 	if ! [ "${!1}" -ne "${!2}" ]
 	then
+		logErr "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - Failed assertion ${FUNCNAME[0]} $@"
+		logInfo "Variable '${1}' expands to:"
+		logInfo "${DIM}${!1@Q}${NOCOLOR}"
+		logInfo "Meanwhile variable '${2}' expands to: "
+		logInfo "${DIM}${!2@Q}${NOCOLOR}"
 		test -n "${message}" && logErr "${message}" || true
 		exit 1
 	fi
@@ -135,6 +166,11 @@ function assertReMatch()
 	fi
 	if ! [[ ${1} =~ ${2} ]]
 	then
+		logErr "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - Failed assertion ${FUNCNAME[0]}"
+		logInfo "Given text expands to: "
+		logInfo "${DIM}${1@Q}${NOCOLOR}"
+		logInfo "Doesn't match the regular expression:"
+		logInfo "${DIM}${2@Q}${NOCOLOR}"
 		test -n "${message}" && logErr "${message}" || true
 		exit 1
 	fi
@@ -152,6 +188,11 @@ function assertReNotMatch()
 	[[ ${1} =~ ${2} ]] && ret=$? || ret=$?
 	if [ "${ret}" -ne 1 ]
 	then
+		logErr "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - Failed assertion ${FUNCNAME[0]}"
+		logInfo "Given text expands to: "
+		logInfo "${DIM}${1@Q}${NOCOLOR}"
+		logInfo "Match the regular expression:"
+		logInfo "${DIM}${2@Q}${NOCOLOR}"
 		test -n "${message}" && logErr "${message}"
 		exit 1
 	fi
@@ -193,7 +234,7 @@ function assertCmd()
 				shift
 				message="$1"
 				;;
-			(-w|--what)
+			(-w|--what)   # Deprecated
 				displayWhat=0
 				;;
 			(--) shift; break;;
@@ -201,27 +242,6 @@ function assertCmd()
 		esac
 		shift
 	done
-	local optOutMessage=""
-	local optErrMessage=""
-	local optRetMessage=""
-	local NotExecMessage=""
-	local NotFoundMessage=""
-	if [ "${displayWhat}" -eq 0 ]
-	then
-		optOutMessage="assertCmd: Command's output does not match expected output for '$@'"
-		optErrMessage="assertCmd: Command's error does not match expected error for ''$@'"
-		optRetMessage="assertCmd: Command's returned status does not match the expected for '$@'"
-		NotExecMessage="assertCmd: Command is not executable '$@'"
-		NotFoundMessage="assertCmd: Command can not be found '$@'"
-	fi
-	if [ -n "${message}" ]
-	then
-		optOutMessage="${message}"
-		optErrMessage="${message}"
-		optRetMessage="${message}"
-		NotExecMessage="${message}"
-		NotFoundMessage="${message}"
-	fi
 
 	# Execute
 	local ret
@@ -230,33 +250,74 @@ function assertCmd()
 	# Check resuls
 	if [ "${ignoreFailedExec}" -ne "0" ] && [ "${ret}" -eq 126 ]
 	then
-		test -n "${NotExecMessage}" && logErr "${NotExecMessage}" || true
+		logErr "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - Failed assertion ${FUNCNAME[0]}"
+		logErr "Command is not executable"
+		logInfo "Executed Command:"
+		logInfo "${DIM}${@@Q}${NOCOLOR}"
+		test -n "${message}" && logErr "${message}" || true
 		exit 126
 	fi
 	if [ "${ignoreFailedExec}" -ne "0" ] && [ "${ret}" -eq 127 ]
 	then
-		test -n "${NotFoundMessage}" && logErr "${NotFoundMessage}" || true
+		logErr "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - Failed assertion ${FUNCNAME[0]}"
+		logErr "Command not found"
+		logInfo "Executed Command:"
+		logInfo "${DIM}${@@Q}${NOCOLOR}"
+		test -n "${message}" && logErr "${message}" || true
 		exit 127
 	fi
-	test -v expectedReturn && assertIntEq -m "${optRetMessage}" resultReturn expectedReturn || true
-	test -v expectedOutput && assertStrEq -m "${optOutMessage}" resultOutput expectedOutput || true
-	test -v expectedError  && assertStrEq -m "${optErrMessage}" resultError  expectedError  || true
+	if [ -v expectedReturn ] && [ "${resultReturn}" -ne "${expectedReturn}" ]
+	then
+		logErr "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - Failed assertion ${FUNCNAME[0]}"
+		logInfo "Executed Command:"
+		logInfo "${DIM}${@@Q}${NOCOLOR}"
+		logInfo "The given command returned with status: "
+		logInfo "${DIM}${resultReturn@Q}${NOCOLOR}"
+		logInfo "Doesn't match the expected return status:"
+		logInfo "${DIM}${expectedReturn@Q}${NOCOLOR}"
+		test -n "${message}" && logErr "${message}" || true
+		exit 1
+	fi
+	if [ -v expectedOutput ] && [ "${resultOutput}" != "${expectedOutput}" ]
+	then
+		logErr "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - Failed assertion ${FUNCNAME[0]}"
+		logInfo "Executed Command:"
+		logInfo "${DIM}${@@Q}${NOCOLOR}"
+		logInfo "The given command's standard output: "
+		logInfo "${DIM}${resultOutput@Q}${NOCOLOR}"
+		logInfo "Doesn't match the expected Output:"
+		logInfo "${DIM}${expectedOutput@Q}${NOCOLOR}"
+		test -n "${message}" && logErr "${message}" || true
+		exit 1
+	fi
+	if [ -v expectedError ] && [ "${resultError}" != "${expectedError}" ]
+	then
+		logErr "${BASH_SOURCE[1]}:${BASH_LINENO[0]} - Failed assertion ${FUNCNAME[0]}"
+		logInfo "Executed Command:"
+		logInfo "${DIM}${@@Q}${NOCOLOR}"
+		logInfo "The given command's standard error: "
+		logInfo "${DIM}${resultError@Q}${NOCOLOR}"
+		logInfo "Doesn't match the expected Output:"
+		logInfo "${DIM}${expectedError@Q}${NOCOLOR}"
+		test -n "${message}" && logErr "${message}" || true
+		exit 1
+	fi
 	return 0
 }
 function logInfo()
 {
 	echo -ne "[ ${LIGHT_BLUE}INFO${NOCOLOR}  ] ${CURRENT_TEST} - "
-	echo "$1"
+	echo "$@"
 }
 function logWarn()
 {
 	echo -ne "[${YELLOW}WARNING${NOCOLOR}] ${CURRENT_TEST} - "
-	echo "$1"
+	echo "$@"
 }
 function logErr()
 {
 	echo -ne "[ ${LIGHT_RED}ERROR${NOCOLOR} ] ${CURRENT_TEST} - "
-	echo "$1"
+	echo "$@"
 }
 function runCmd()
 {
@@ -409,21 +470,35 @@ function tebasSetupColors()
 	#if output is a terminal use colors
 	if [ -t 1 ]
 	then
-		declare -gr NOCOLOR='\033[0m'
-		declare -gr RED='\033[0;31m'
-		declare -gr GREEN='\033[32m'
-		declare -gr YELLOW='\033[33m'
-		declare -gr BLUE='\033[34m'
-		declare -gr LIGHT_RED='\033[91m'
-		declare -gr LIGHT_BLUE='\033[94m'
+		declare -gr NOCOLOR=$'\033[0m'
+		declare -gr RED=$'\033[0;31m'
+		declare -gr GREEN=$'\033[32m'
+		declare -gr YELLOW=$'\033[33m'
+		declare -gr BLUE=$'\033[34m'
+		declare -gr MAGENTA=$'\033[35m'
+		declare -gr CYAN=$'\033[36m'
+		declare -gr LIGHT_RED=$'\033[91m'
+		declare -gr LIGHT_GREEN=$'033[92m'
+		declare -gr LIGHT_YELLOW=$'033[93m'
+		declare -gr LIGHT_BLUE=$'\033[94m'
+		declare -gr LIGHT_MAGENTA=$'\033[95m'
+		declare -gr LIGHT_CYAN=$'\033[96m'
+		declare -gr DIM=$'\033[2m'
 	else
 		declare -gr NOCOLOR=''
 		declare -gr RED=''
 		declare -gr GREEN=''
 		declare -gr YELLOW=''
 		declare -gr BLUE=''
+		declare -gr MAGENTA=''
+		declare -gr CYAN=''
 		declare -gr LIGTH_RED=''
+		declare -gr LIGHT_GREEN=''
+		declare -gr LIGHT_YELLOW=''
 		declare -gr LIGTH_BLUE=''
+		declare -gr LIGHT_MAGENTA=''
+		declare -gr LIGHT_CYAN=''
+		declare -gr DIM=''
 	fi
 }
 function tebasOnTestExit()
